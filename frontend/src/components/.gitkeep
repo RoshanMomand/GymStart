@@ -1,0 +1,8 @@
+// Shared / reusable UI components
+// Each component should live in its own file: /components/ComponentName.tsx
+//
+// Planned components (TODO):
+//   - Button.tsx
+//   - Card.tsx
+//   - LoadingSpinner.tsx
+//   - ErrorMessage.tsx
