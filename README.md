@@ -18,7 +18,7 @@ GymStart/
 
 ### Frontend
 ```bash
-cd frontend
+cd frontend-corrupt
 npm install
 npx expo start
 ```

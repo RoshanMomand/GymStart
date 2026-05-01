@@ -2,22 +2,80 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
-    /**
-     * Return the authenticated user's profile.
-     * GET /profile
-     *
-     * TODO: Resolve the user from the request (auth middleware)
-     * TODO: Delegate to UserService::getProfile()
-     * TODO: Return user profile resource
-     */
+    public function update(Request $request): JsonResponse
+    {
+        $request->validate([
+            'workout_preference'    => 'sometimes|in:gym,home,outdoor',
+            'training_days'         => 'sometimes|integer|min:1|max:7',
+            'food_preferences'      => 'sometimes|array',
+            'food_preferences.*'    => 'string',
+            'dietary_preferences'   => 'sometimes|array',
+            'dietary_preferences.*' => 'string',
+            'allergies'             => 'sometimes|array',
+            'allergies.*'           => 'string',
+            'food_dislikes'         => 'sometimes|array',
+            'food_dislikes.*'       => 'string',
+        ]);
+
+        $profile = Auth::user()->profile;
+
+        if (!$profile) {
+            return response()->json(['message' => 'Profile not found'], 404);
+        }
+
+        $profile->update($request->only([
+            'workout_preference', 'training_days',
+            'food_preferences', 'dietary_preferences',
+            'allergies', 'food_dislikes',
+        ]));
+
+        return response()->json(['message' => 'Profile updated', 'data' => $profile]);
+    }
+
+    public function updateName(Request $request): JsonResponse
+    {
+        $request->validate(['name' => 'required|string|min:2|max:255']);
+        $user = Auth::user();
+        $user->update(['name' => $request->name]);
+        return response()->json(['message' => 'Name updated', 'data' => ['name' => $user->name]]);
+    }
+
     public function show(Request $request): JsonResponse
     {
-        // TODO: implement
-        return response()->json(['message' => 'profile endpoint'], 501);
+        $user = Auth::user();
+        $profile = $user->profile;
+
+        if (!$profile) {
+            return response()->json(['message' => 'Profile not found'], 404);
+        }
+
+        return response()->json(['data' => $profile]);
+    }
+
+    public function updateWeight(Request $request): JsonResponse
+    {
+        $request->validate([
+            'weight_kg' => 'required|numeric|min:30|max:500',
+        ]);
+
+        $user    = Auth::user();
+        $profile = $user->profile;
+
+        if (!$profile) {
+            return response()->json(['message' => 'Profile not found'], 404);
+        }
+
+        $profile->update(['weight_kg' => $request->weight_kg]);
+
+        return response()->json([
+            'message' => 'Weight updated',
+            'data'    => ['weight_kg' => $profile->weight_kg],
+        ]);
     }
 }

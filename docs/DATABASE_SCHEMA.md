@@ -13,7 +13,7 @@ Stores app user accounts and onboarding profile data.
 |-----------------|-----------------------------|------------------------------|--------------------------------------------------|
 | `id`            | `BIGSERIAL`                 | PRIMARY KEY                  | Auto-incrementing user identifier                |
 | `name`          | `VARCHAR(255)`              | NOT NULL                     | Display name                                     |
-| `email`         | `VARCHAR(255)`              | NOT NULL, UNIQUE             | Login email address                              |
+| `email`         | `VARCHAR(255)`              | NOT NULL, UNIQUE             | LoginScreen email address                              |
 | `password`      | `VARCHAR(255)`              | NOT NULL                     | Bcrypt-hashed password                           |
 | `age`           | `SMALLINT`                  | NULLABLE                     | User's age (collected during onboarding)         |
 | `weight_kg`     | `NUMERIC(5,2)`              | NULLABLE                     | Body weight in kilograms                         |

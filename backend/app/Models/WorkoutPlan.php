@@ -2,28 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * WorkoutPlan model
- *
- * Represents a personalised workout plan belonging to a user.
- *
- * Table: workout_plans
- * Columns: see /docs/DATABASE_SCHEMA.md
- *
- * TODO: Add relationships (belongsTo User)
- * TODO: Add fillable / casts arrays
- */
 class WorkoutPlan extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'user_id',
+        'exercises',
+        'notes',
+        'is_active',
+    ];
 
-    // TODO: define $fillable
-    // TODO: define $casts
+    protected $casts = [
+        'exercises' => 'array',
+        'is_active' => 'boolean',
+    ];
 
+    /**
+     * Get the user that this workout plan belongs to
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
