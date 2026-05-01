@@ -2,30 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * MealPlan model
- *
- * Represents a personalised meal plan belonging to a user.
- *
- * Table: meal_plans
- * Columns: see /docs/DATABASE_SCHEMA.md
- *
- * TODO: Add relationships (belongsTo User)
- * TODO: Add fillable / casts arrays
- */
+
 class MealPlan extends Model
 {
-    use HasFactory;
+    protected $fillable = ['goal', 'is_active',];
 
-    // TODO: define $fillable
-    // TODO: define $casts
-
-    public function user(): BelongsTo
+    public function types(): HasMany
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(MealPlanType::class);
     }
 }

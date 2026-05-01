@@ -13,5 +13,13 @@ namespace App\Services;
  */
 class MealPlanService
 {
-    // TODO: implement
+    public function getPlanForUser(int $userId)
+    {
+        // TODO: Load the meal plan for the user from the database
+    }
+
+    public function generatePlan(array $userProfile)
+    {
+        // TODO: Implement meal plan generation logic
+    }
 }

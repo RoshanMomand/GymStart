@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
@@ -18,6 +18,9 @@ class ProfileController extends Controller
     public function show(Request $request): JsonResponse
     {
         // TODO: implement
-        return response()->json(['message' => 'profile endpoint'], 501);
+        return response()
+            ->json(['message' => 'profile endpoint'], 501);
+
     }
+
 }
