@@ -44,9 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/mealplans' , [MealPlanController::class , 'index']);
     Route::post('/mealplans/generate' , [MealPlanController::class , 'generate']);
-    Route::get('/profile'          , [ProfileController::class , 'show']);
-    Route::patch('/profile'        , [ProfileController::class , 'update']);
-    Route::patch('/profile/name'   , [ProfileController::class , 'updateName']);
-    Route::patch('/profile/weight' , [ProfileController::class , 'updateWeight']);
+    Route::get('/profile'                 , [ProfileController::class , 'show']);
+    Route::patch('/profile'              , [ProfileController::class , 'update']);
+    Route::patch('/profile/name'         , [ProfileController::class , 'updateName']);
+    Route::patch('/profile/weight'       , [ProfileController::class , 'updateWeight']);
+    Route::get('/profile/weight-history' , [ProfileController::class , 'weightHistory']);
 
 });

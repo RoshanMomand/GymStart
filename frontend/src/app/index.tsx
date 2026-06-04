@@ -77,12 +77,14 @@ export default function HomeScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [currentWeight, setCurrentWeight] = useState<number>(0);
+  const [deltaKg, setDeltaKg] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [weightInput, setWeightInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAll();
@@ -112,12 +114,11 @@ export default function HomeScreen() {
         setProfile(data);
         setCurrentWeight(data.weight_kg);
 
-        // Restore locally overridden weight if the user updated it
-        const stored = await AsyncStorage.getItem('currentWeight');
-        if (stored) setCurrentWeight(parseFloat(stored));
-
         const ts = await AsyncStorage.getItem('weightUpdatedAt');
         setLastUpdated(ts ? formatLastUpdated(ts) : 'from onboarding');
+
+        const storedDelta = await AsyncStorage.getItem('weightDelta');
+        if (storedDelta) setDeltaKg(parseFloat(storedDelta));
       }
 
       if (planRes.ok) {
@@ -136,25 +137,36 @@ export default function HomeScreen() {
     if (isNaN(value) || value < 30 || value > 500) return;
 
     setSaving(true);
+    setSaveError(null);
     try {
       const headers = await authHeaders();
-      await fetch(`${API}/profile/weight`, {
+      const res = await fetch(`${API}/profile/weight`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({weight_kg: value}),
       });
 
+      if (!res.ok) {
+        const body = await res.json();
+        setSaveError(body.message ?? 'Something went wrong');
+        return;
+      }
+
+      const json = await res.json();
+      const delta: number | null = json.data?.delta_kg ?? null;
+
       setCurrentWeight(value);
+      setDeltaKg(delta);
+
       const now = new Date().toISOString();
-      await AsyncStorage.setItem('currentWeight', String(value));
       await AsyncStorage.setItem('weightUpdatedAt', now);
+      if (delta !== null) await AsyncStorage.setItem('weightDelta', String(delta));
+
       setLastUpdated('just now');
       setShowModal(false);
       setWeightInput('');
     } catch (_) {
-      // still update local state
-      setCurrentWeight(value);
-      setShowModal(false);
+      setSaveError('Could not connect to server');
     } finally {
       setSaving(false);
     }
@@ -187,8 +199,13 @@ export default function HomeScreen() {
             <Text style={s.greetingSub}>Ready for today?</Text>
           </View>
 
-          <View style={s.bell}><Ionicons name="notifications-outline" size={22}
-                                         color="#888"/></View>
+          <View style={s.bell}>
+            <Ionicons
+              name="notifications-outline"
+              size={22}
+              color="#888"/>
+          </View>
+          {/*<View style={s.bell}/>*/}
         </View>
 
         {loading ? (
@@ -204,13 +221,13 @@ export default function HomeScreen() {
               <Text style={s.cardTitle}>Today's Progress</Text>
               <View style={s.progressRow}>
                 <View style={s.progressBox}>
-                  <Ionicons name="flame-outline" size={24} color="#F97316"/>
+                  {/* <Ionicons name="flame-outline" size={24} color="#F97316"/> */}
                   <Text style={s.progressLabel}>Calories</Text>
                   <Text style={s.progressValue}>0</Text>
                   <Text style={s.progressSub}>kcal burned</Text>
                 </View>
                 <View style={s.progressBox}>
-                  <Ionicons name="barbell-outline" size={24} color="#4ADE80"/>
+                  {/* <Ionicons name="barbell-outline" size={24} color="#4ADE80"/> */}
                   <Text style={s.progressLabel}>Workouts</Text>
                   <Text
                     style={s.progressValue}>{profile?.training_days ?? 0}/wk</Text>
@@ -222,8 +239,8 @@ export default function HomeScreen() {
             {/* ── Your Weight ──────────────────────────────────── */}
             <View style={s.card}>
               <View style={s.cardRow}>
-                <View style={[s.iconCircle, {backgroundColor: '#6D28D9'}]}>
-                  <Ionicons name="scale-outline" size={20} color="#fff"/>
+                <View style={[s.iconCircle, {/* backgroundColor: '#6D28D9' */}]}>
+                  {/* <Ionicons name="scale-outline" size={20} color="#fff"/> */}
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.cardSectionTitle}>Your Weight</Text>
@@ -243,10 +260,14 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <Text style={s.weeklyChange}>
-                {isLosing ? '↓' : '↑'} {formatWeight(Math.abs(Math.min(goalDiff, 1)))} kg
-                this week
-              </Text>
+              {deltaKg !== null && (
+                <View style={s.deltaRow}>
+                  {/* <Ionicons name={deltaKg <= 0 ? 'trending-down-outline' : 'trending-up-outline'} size={16} color={deltaKg <= 0 ? '#4ADE80' : '#F87171'}/> */}
+                  <Text style={[s.deltaText, {color: deltaKg <= 0 ? '#4ADE80' : '#F87171'}]}>
+                    {deltaKg > 0 ? '+' : ''}{deltaKg.toFixed(1)} kg since last update
+                  </Text>
+                </View>
+              )}
 
               <TouchableOpacity style={s.greenBtn} onPress={() => {
                 setWeightInput(String(currentWeight).replace('.', ','));
@@ -259,8 +280,8 @@ export default function HomeScreen() {
             {/* ── Today's Workout ──────────────────────────────── */}
             <View style={s.card}>
               <View style={s.cardRow}>
-                <View style={[s.iconCircle, {backgroundColor: '#1D4ED8'}]}>
-                  <Ionicons name="barbell-outline" size={20} color="#fff"/>
+                <View style={[s.iconCircle, {/* backgroundColor: '#1D4ED8' */}]}>
+                  {/* <Ionicons name="barbell-outline" size={20} color="#fff"/> */}
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.cardSectionTitle}>Today's Workout</Text>
@@ -276,8 +297,8 @@ export default function HomeScreen() {
             {/* ── Today's Meals ─────────────────────────────────── */}
             <View style={s.card}>
               <View style={s.cardRow}>
-                <View style={[s.iconCircle, {backgroundColor: '#92400E'}]}>
-                  <Ionicons name="restaurant-outline" size={20} color="#fff"/>
+                <View style={[s.iconCircle, {/* backgroundColor: '#92400E' */}]}>
+                  {/* <Ionicons name="restaurant-outline" size={20} color="#fff"/> */}
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.cardSectionTitle}>Today's Meals</Text>
@@ -289,8 +310,8 @@ export default function HomeScreen() {
 
               {breakfast && (
                 <View style={s.mealRow}>
-                  <View style={[s.mealIconBox, {backgroundColor: '#F97316'}]}>
-                    <Ionicons name="cafe-outline" size={16} color="#fff"/>
+                  <View style={[s.mealIconBox, {/* backgroundColor: '#F97316' */}]}>
+                    {/* <Ionicons name="cafe-outline" size={16} color="#fff"/> */}
                   </View>
                   <View style={{flex: 1}}>
                     <Text style={s.mealName}>Breakfast</Text>
@@ -302,8 +323,8 @@ export default function HomeScreen() {
 
               {lunch && (
                 <View style={s.mealRow}>
-                  <View style={[s.mealIconBox, {backgroundColor: '#16A34A'}]}>
-                    <Ionicons name="leaf-outline" size={16} color="#fff"/>
+                  <View style={[s.mealIconBox, {/* backgroundColor: '#16A34A' */}]}>
+                    {/* <Ionicons name="leaf-outline" size={16} color="#fff"/> */}
                   </View>
                   <View style={{flex: 1}}>
                     <Text style={s.mealName}>Lunch</Text>
@@ -311,11 +332,6 @@ export default function HomeScreen() {
                   </View>
                   <Text style={s.mealCal}>{lunch.calories} cal</Text>
                 </View>
-              )}
-
-              {!breakfast && !lunch && (
-                <Text style={s.emptyText}>Complete onboarding to see your
-                  meals</Text>
               )}
 
               <TouchableOpacity style={s.greenBtn}
@@ -337,6 +353,10 @@ export default function HomeScreen() {
             <Pressable style={s.modalCard} onPress={e => e.stopPropagation()}>
               <Text style={s.modalTitle}>Update Weight</Text>
               <Text style={s.modalSub}>Enter your current weight in kg</Text>
+
+              {saveError && (
+                <Text style={s.modalError}>{saveError}</Text>
+              )}
 
               <TextInput
                 style={s.modalInput}
@@ -453,7 +473,8 @@ const s = StyleSheet.create({
   weightUnit: {fontSize: 22, fontWeight: '400', color: MUTED},
   goalLabel: {color: MUTED, fontSize: 12},
   goalValue: {color: TEXT, fontSize: 18, fontWeight: '600'},
-  weeklyChange: {color: GREEN, fontSize: 13, fontWeight: '500'},
+  deltaRow: {flexDirection: 'row', alignItems: 'center', gap: 6},
+  deltaText: {fontSize: 13, fontWeight: '500'},
 
   // Buttons
   greenBtn: {
@@ -505,6 +526,7 @@ const s = StyleSheet.create({
   },
   modalTitle: {color: TEXT, fontSize: 20, fontWeight: '700'},
   modalSub: {color: MUTED, fontSize: 14, marginTop: -8},
+  modalError: {color: '#F87171', fontSize: 13, textAlign: 'center'},
   modalInput: {
     backgroundColor: INNER,
     borderRadius: 12,

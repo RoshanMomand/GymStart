@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WeightLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -73,9 +74,42 @@ class ProfileController extends Controller
 
         $profile->update(['weight_kg' => $request->weight_kg]);
 
+        $log = WeightLog::create([
+            'user_id'   => $user->id,
+            'weight_kg' => $request->weight_kg,
+            'logged_at' => now(),
+        ]);
+
+        // Delta vs most recent previous log entry
+        $previous = WeightLog::where('user_id', $user->id)
+            ->where('id', '<', $log->id)
+            ->orderByDesc('logged_at')
+            ->first();
+
+        $delta = $previous ? round($request->weight_kg - $previous->weight_kg, 2) : null;
+
         return response()->json([
             'message' => 'Weight updated',
-            'data'    => ['weight_kg' => $profile->weight_kg],
+            'data'    => [
+                'weight_kg'    => $profile->weight_kg,
+                'logged_at'    => $log->logged_at,
+                'delta_kg'     => $delta,
+            ],
         ]);
+    }
+
+    public function weightHistory(): JsonResponse
+    {
+        $logs = WeightLog::where('user_id', Auth::id())
+            ->orderByDesc('logged_at')
+            ->limit(90)
+            ->get()
+            ->map(fn ($log) => [
+                'id'        => $log->id,
+                'weight_kg' => $log->weight_kg,
+                'logged_at' => $log->logged_at,
+            ]);
+
+        return response()->json(['data' => $logs]);
     }
 }

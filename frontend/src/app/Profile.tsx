@@ -3,6 +3,7 @@ import {
   Animated,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   Text,
   TouchableOpacity,
   View,
@@ -20,6 +21,7 @@ import WorkoutModal        from '@/components/profile/WorkoutModal';
 import NutritionModal      from '@/components/profile/NutritionModal';
 import NotificationsModal  from '@/components/profile/NotificationsModal';
 import PrivacyModal        from '@/components/profile/PrivacyModal';
+import WeightChart         from '@/components/WeightChart';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -257,10 +259,12 @@ type ActiveModal = 'editProfile' | 'workout' | 'nutrition' | 'notifications' | '
 
 export default function ProfileScreen() {
   const {user, signOut, updateUser} = useAuth();
+  const {width: screenWidth} = useWindowDimensions();
 
   // ── Data state ──────────────────────────────────────────────────────────────
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [nutrition,   setNutrition]   = useState<NutritionTargets | null>(null);
+  const [profileData,   setProfileData]   = useState<ProfileData | null>(null);
+  const [nutrition,     setNutrition]     = useState<NutritionTargets | null>(null);
+  const [weightHistory, setWeightHistory] = useState<{id: number; weight_kg: number; logged_at: string}[]>([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // ── Modal state ─────────────────────────────────────────────────────────────
@@ -284,9 +288,10 @@ export default function ProfileScreen() {
   const loadData = async () => {
     try {
       const headers = await authHeaders();
-      const [profileRes, planRes] = await Promise.all([
-        fetch(`${API}/onboarding/profile`, {headers}),
-        fetch(`${API}/mealplans`,          {headers}),
+      const [profileRes, planRes, weightRes] = await Promise.all([
+        fetch(`${API}/onboarding/profile`,       {headers}),
+        fetch(`${API}/mealplans`,                {headers}),
+        fetch(`${API}/profile/weight-history`,   {headers}),
       ]);
 
       if (profileRes.ok) {
@@ -298,6 +303,11 @@ export default function ProfileScreen() {
         const json = await planRes.json();
         const targets = json.data?.daily_targets as NutritionTargets | undefined;
         if (targets) setNutrition(targets);
+      }
+
+      if (weightRes.ok) {
+        const json = await weightRes.json();
+        setWeightHistory(json.data ?? []);
       }
     } catch (_) {
       // degrade silently
@@ -453,6 +463,43 @@ export default function ProfileScreen() {
                     {ACTIVITY_LABELS[profileData.activity_level] ?? '—'}
                   </Text>
                 </View>
+              </View>
+            ) : null}
+
+            {/* ── Weight history card ─────────────────────────────────────────── */}
+            {weightHistory.length > 0 ? (
+              <View style={s.card}>
+                <SectionHeader icon="trending-down-outline" title="Weight History" />
+
+                {weightHistory.length >= 2 && (
+                  <WeightChart
+                    data={weightHistory}
+                    width={screenWidth - 64}
+                  />
+                )}
+
+                <View style={s.weightLogDivider}/>
+
+                {weightHistory.slice(0, 8).map((entry, i) => {
+                  const prev = weightHistory[i + 1];
+                  const delta = prev ? Math.round((entry.weight_kg - prev.weight_kg) * 10) / 10 : null;
+                  const date = new Date(entry.logged_at).toLocaleDateString('nl-NL', {
+                    day: 'numeric', month: 'short',
+                  });
+                  return (
+                    <View key={entry.id} style={[s.weightLogRow, i === 0 && {borderTopWidth: 0}]}>
+                      <Text style={s.weightLogDate}>{date}</Text>
+                      <Text style={s.weightLogValue}>{entry.weight_kg} kg</Text>
+                      {delta !== null ? (
+                        <Text style={[s.weightLogDelta, {color: delta <= 0 ? '#4ADE80' : '#F87171'}]}>
+                          {delta > 0 ? '+' : ''}{delta.toFixed(1)} kg
+                        </Text>
+                      ) : (
+                        <Text style={s.weightLogDelta}/>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             ) : null}
 
@@ -617,6 +664,11 @@ const s = StyleSheet.create({
   bodyDivider:  {width: 1, height: 44, backgroundColor: BORDER},
   activityBadge:{flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#1A1A2E', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: '#2D2D5E'},
   activityBadgeText:{color: '#A78BFA', fontSize: 13, fontWeight: '500'},
+  weightLogDivider: {height: 1, backgroundColor: '#2A2A2A', marginVertical: 8},
+  weightLogRow:     {flexDirection: 'row', alignItems: 'center', paddingVertical: 9, borderTopWidth: 1, borderColor: '#1E1E1E'},
+  weightLogDate:    {flex: 1, color: '#9CA3AF', fontSize: 13},
+  weightLogValue:   {color: '#FFFFFF', fontSize: 14, fontWeight: '600', marginRight: 8},
+  weightLogDelta:   {fontSize: 13, fontWeight: '500', minWidth: 52, textAlign: 'right'},
 
   // Nutrition
   calorieRow:  {flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginBottom: 12},
