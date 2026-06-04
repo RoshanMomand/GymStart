@@ -15,6 +15,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
+import {Ionicons} from '@expo/vector-icons';
 import {useAuth} from '@/contexts/AuthContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -39,7 +40,10 @@ interface MealSlot {
 
 interface MealPlan {
   goal: string;
-  day_types: Array<{ type: string; meals: MealSlot[] }>;
+  day_types: Array<{
+    type: string;
+    meals: MealSlot[]
+  }>;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -86,7 +90,11 @@ export default function HomeScreen() {
 
   const authHeaders = async () => {
     const token = await AsyncStorage.getItem('authToken');
-    return {Authorization: `Bearer ${token}`, Accept: 'application/json', 'Content-Type': 'application/json'};
+    return {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    };
   };
 
   const loadAll = async () => {
@@ -153,8 +161,7 @@ export default function HomeScreen() {
   };
 
   // Today's meals: use training day if available
-  const todayType = mealPlan?.day_types.find(d => d.type === 'training')
-    ?? mealPlan?.day_types[0];
+  const todayType = mealPlan?.day_types.find(d => d.type === 'training') ?? mealPlan?.day_types[0];
   const breakfast = todayType?.meals.find(m => m.meal_name === 'Breakfast');
   const lunch = todayType?.meals.find(m => m.meal_name === 'Lunch');
 
@@ -173,16 +180,15 @@ export default function HomeScreen() {
     <View style={s.root}>
       <SafeAreaView style={{flex: 1}}>
 
-        {/* ── Header ─────────────────────────────────────────── */}
         <View style={s.header}>
-          <View style={s.bell}><Text style={s.bellIcon}>🔔</Text></View>
-
           <View style={s.headerCenter}>
-            <Text style={s.greeting}>{getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}</Text>
+            <Text
+              style={s.greeting}>{getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}</Text>
             <Text style={s.greetingSub}>Ready for today?</Text>
           </View>
 
-          <View style={s.bell}><Text style={s.bellIcon}>🔔</Text></View>
+          <View style={s.bell}><Ionicons name="notifications-outline" size={22}
+                                         color="#888"/></View>
         </View>
 
         {loading ? (
@@ -190,22 +196,24 @@ export default function HomeScreen() {
             <ActivityIndicator color="#4ADE80" size="large"/>
           </View>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{gap: 12, paddingBottom: 24}}>
+          <ScrollView showsVerticalScrollIndicator={false}
+                      contentContainerStyle={{gap: 12, paddingBottom: 24}}>
 
             {/* ── Today's Progress ─────────────────────────────── */}
             <View style={s.card}>
               <Text style={s.cardTitle}>Today's Progress</Text>
               <View style={s.progressRow}>
                 <View style={s.progressBox}>
-                  <Text style={s.progressIcon}>🔥</Text>
+                  <Ionicons name="flame-outline" size={24} color="#F97316"/>
                   <Text style={s.progressLabel}>Calories</Text>
                   <Text style={s.progressValue}>0</Text>
                   <Text style={s.progressSub}>kcal burned</Text>
                 </View>
                 <View style={s.progressBox}>
-                  <Text style={s.progressIcon}>🏋️</Text>
+                  <Ionicons name="barbell-outline" size={24} color="#4ADE80"/>
                   <Text style={s.progressLabel}>Workouts</Text>
-                  <Text style={s.progressValue}>{profile?.training_days ?? 0}/wk</Text>
+                  <Text
+                    style={s.progressValue}>{profile?.training_days ?? 0}/wk</Text>
                   <Text style={s.progressSub}>planned</Text>
                 </View>
               </View>
@@ -215,11 +223,12 @@ export default function HomeScreen() {
             <View style={s.card}>
               <View style={s.cardRow}>
                 <View style={[s.iconCircle, {backgroundColor: '#6D28D9'}]}>
-                  <Text style={s.iconText}>⚖️</Text>
+                  <Ionicons name="scale-outline" size={20} color="#fff"/>
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.cardSectionTitle}>Your Weight</Text>
-                  <Text style={s.cardSectionSub}>Last updated {lastUpdated || 'from onboarding'}</Text>
+                  <Text style={s.cardSectionSub}>Last
+                    updated {lastUpdated || 'from onboarding'}</Text>
                 </View>
               </View>
 
@@ -235,7 +244,8 @@ export default function HomeScreen() {
               </View>
 
               <Text style={s.weeklyChange}>
-                {isLosing ? '↓' : '↑'} {formatWeight(Math.abs(Math.min(goalDiff, 1)))} kg this week
+                {isLosing ? '↓' : '↑'} {formatWeight(Math.abs(Math.min(goalDiff, 1)))} kg
+                this week
               </Text>
 
               <TouchableOpacity style={s.greenBtn} onPress={() => {
@@ -250,14 +260,15 @@ export default function HomeScreen() {
             <View style={s.card}>
               <View style={s.cardRow}>
                 <View style={[s.iconCircle, {backgroundColor: '#1D4ED8'}]}>
-                  <Text style={s.iconText}>🏋️</Text>
+                  <Ionicons name="barbell-outline" size={20} color="#fff"/>
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.cardSectionTitle}>Today's Workout</Text>
                   <Text style={s.cardSectionSub}>{workoutLabel}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={s.greenBtn} onPress={() => navigation.navigate('Workout')}>
+              <TouchableOpacity style={s.greenBtn}
+                                onPress={() => navigation.navigate('Workout')}>
                 <Text style={s.greenBtnText}>View</Text>
               </TouchableOpacity>
             </View>
@@ -266,7 +277,7 @@ export default function HomeScreen() {
             <View style={s.card}>
               <View style={s.cardRow}>
                 <View style={[s.iconCircle, {backgroundColor: '#92400E'}]}>
-                  <Text style={s.iconText}>🍽️</Text>
+                  <Ionicons name="restaurant-outline" size={20} color="#fff"/>
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.cardSectionTitle}>Today's Meals</Text>
@@ -279,7 +290,7 @@ export default function HomeScreen() {
               {breakfast && (
                 <View style={s.mealRow}>
                   <View style={[s.mealIconBox, {backgroundColor: '#F97316'}]}>
-                    <Text style={s.mealIconText}>☕</Text>
+                    <Ionicons name="cafe-outline" size={16} color="#fff"/>
                   </View>
                   <View style={{flex: 1}}>
                     <Text style={s.mealName}>Breakfast</Text>
@@ -292,7 +303,7 @@ export default function HomeScreen() {
               {lunch && (
                 <View style={s.mealRow}>
                   <View style={[s.mealIconBox, {backgroundColor: '#16A34A'}]}>
-                    <Text style={s.mealIconText}>🥗</Text>
+                    <Ionicons name="leaf-outline" size={16} color="#fff"/>
                   </View>
                   <View style={{flex: 1}}>
                     <Text style={s.mealName}>Lunch</Text>
@@ -303,10 +314,12 @@ export default function HomeScreen() {
               )}
 
               {!breakfast && !lunch && (
-                <Text style={s.emptyText}>Complete onboarding to see your meals</Text>
+                <Text style={s.emptyText}>Complete onboarding to see your
+                  meals</Text>
               )}
 
-              <TouchableOpacity style={s.greenBtn} onPress={() => navigation.navigate('Meal')}>
+              <TouchableOpacity style={s.greenBtn}
+                                onPress={() => navigation.navigate('Meal')}>
                 <Text style={s.greenBtnText}>View All Meals</Text>
               </TouchableOpacity>
             </View>
@@ -316,9 +329,11 @@ export default function HomeScreen() {
       </SafeAreaView>
 
       {/* ── Weight Update Modal ──────────────────────────────────── */}
-      <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
+      <Modal visible={showModal} transparent animationType="slide"
+             onRequestClose={() => setShowModal(false)}>
         <Pressable style={s.modalOverlay} onPress={() => setShowModal(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <Pressable style={s.modalCard} onPress={e => e.stopPropagation()}>
               <Text style={s.modalTitle}>Update Weight</Text>
               <Text style={s.modalSub}>Enter your current weight in kg</Text>
@@ -335,7 +350,8 @@ export default function HomeScreen() {
               />
 
               <View style={s.modalBtns}>
-                <TouchableOpacity style={s.modalCancel} onPress={() => setShowModal(false)}>
+                <TouchableOpacity style={s.modalCancel}
+                                  onPress={() => setShowModal(false)}>
                   <Text style={s.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -343,7 +359,8 @@ export default function HomeScreen() {
                   onPress={handleUpdateWeight}
                   disabled={saving}
                 >
-                  <Text style={s.modalSaveText}>{saving ? 'Saving…' : 'Save'}</Text>
+                  <Text
+                    style={s.modalSaveText}>{saving ? 'Saving…' : 'Save'}</Text>
                 </TouchableOpacity>
               </View>
             </Pressable>
@@ -378,7 +395,12 @@ const s = StyleSheet.create({
   center: {flex: 1, alignItems: 'center', justifyContent: 'center'},
 
   // Header
-  header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16},
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16
+  },
   bell: {
     width: 40,
     height: 40,
@@ -398,19 +420,35 @@ const s = StyleSheet.create({
   cardRow: {flexDirection: 'row', alignItems: 'center', gap: 12},
   cardSectionTitle: {color: TEXT, fontSize: 15, fontWeight: '600'},
   cardSectionSub: {color: MUTED, fontSize: 12, marginTop: 2},
-  iconCircle: {width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center'},
+  iconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   iconText: {fontSize: 20},
 
   // Progress
   progressRow: {flexDirection: 'row', gap: 12},
-  progressBox: {flex: 1, backgroundColor: INNER, borderRadius: 12, padding: 14, gap: 4},
+  progressBox: {
+    flex: 1,
+    backgroundColor: INNER,
+    borderRadius: 12,
+    padding: 14,
+    gap: 4
+  },
   progressIcon: {fontSize: 20},
   progressLabel: {color: MUTED, fontSize: 12},
   progressValue: {color: TEXT, fontSize: 26, fontWeight: '700'},
   progressSub: {color: MUTED, fontSize: 11},
 
   // Weight
-  weightRow: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end'},
+  weightRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end'
+  },
   weightNumber: {color: TEXT, fontSize: 48, fontWeight: '800', lineHeight: 56},
   weightUnit: {fontSize: 22, fontWeight: '400', color: MUTED},
   goalLabel: {color: MUTED, fontSize: 12},
@@ -418,21 +456,53 @@ const s = StyleSheet.create({
   weeklyChange: {color: GREEN, fontSize: 13, fontWeight: '500'},
 
   // Buttons
-  greenBtn: {backgroundColor: GREEN, borderRadius: 12, paddingVertical: 14, alignItems: 'center'},
+  greenBtn: {
+    backgroundColor: GREEN,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center'
+  },
   greenBtnText: {color: '#111', fontWeight: '700', fontSize: 15},
 
   // Meals
-  mealRow: {flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: INNER, borderRadius: 12, padding: 12},
-  mealIconBox: {width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center'},
+  mealRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: INNER,
+    borderRadius: 12,
+    padding: 12
+  },
+  mealIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   mealIconText: {fontSize: 18},
   mealName: {color: TEXT, fontWeight: '600', fontSize: 14},
   mealDesc: {color: MUTED, fontSize: 12, marginTop: 2},
   mealCal: {color: MUTED, fontSize: 12},
-  emptyText: {color: MUTED, fontSize: 13, textAlign: 'center', paddingVertical: 8},
-
+  emptyText: {
+    color: MUTED,
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 8
+  },
   // Modal
-  modalOverlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24},
-  modalCard: {backgroundColor: '#1E1E1E', borderRadius: 20, padding: 24, gap: 16},
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    paddingHorizontal: 24
+  },
+  modalCard: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 20,
+    padding: 24,
+    gap: 16
+  },
   modalTitle: {color: TEXT, fontSize: 20, fontWeight: '700'},
   modalSub: {color: MUTED, fontSize: 14, marginTop: -8},
   modalInput: {
@@ -447,8 +517,20 @@ const s = StyleSheet.create({
     borderColor: GREEN,
   },
   modalBtns: {flexDirection: 'row', gap: 12},
-  modalCancel: {flex: 1, backgroundColor: INNER, borderRadius: 12, paddingVertical: 14, alignItems: 'center'},
+  modalCancel: {
+    flex: 1,
+    backgroundColor: INNER,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center'
+  },
   modalCancelText: {color: MUTED, fontWeight: '600'},
-  modalSave: {flex: 1, backgroundColor: GREEN, borderRadius: 12, paddingVertical: 14, alignItems: 'center'},
+  modalSave: {
+    flex: 1,
+    backgroundColor: GREEN,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center'
+  },
   modalSaveText: {color: '#111', fontWeight: '700'},
 });

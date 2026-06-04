@@ -1,5 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {FitnessPalette, FitnessSpacing} from '@/constants/fitness-design-tokens';
 
 interface MealsPerDayStepProps {
@@ -49,7 +50,7 @@ export default function MealsPerDayStep({value, onChange}: MealsPerDayStepProps)
                 </Text>
                 <Text style={styles.cardDesc}>{opt.description}</Text>
               </View>
-              {active && <Text style={styles.check}>✓</Text>}
+              {active && <Ionicons name="checkmark" size={18} color="#4ADE80"/>}
             </TouchableOpacity>
           );
         })}

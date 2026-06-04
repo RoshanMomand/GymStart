@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Ionicons} from '@expo/vector-icons';
 import ToggleButton from '@/components/ToggleButton';
 
 // ── Types mirror the API response which is built from the DB relations:
@@ -55,18 +56,19 @@ interface MealPlan {
 // meal_name is now "Meal 1"–"Meal N", "Pre-Workout", or "Post-Workout"
 // derived by the backend from meals.type + meals.order_index.
 
-const SLOT_CONFIG: Record<number, {emoji: string; iconBg: string}> = {
-  1: {emoji: '🍳', iconBg: '#1C2A1C'},
-  2: {emoji: '🍽️', iconBg: '#1A2A25'},
-  3: {emoji: '🥘', iconBg: '#1F1C2A'},
-  4: {emoji: '🥗', iconBg: '#2A1C1C'},
-  5: {emoji: '🍱', iconBg: '#1C1C2A'},
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+const SLOT_CONFIG: Record<number, {icon: IoniconsName; iconBg: string}> = {
+  1: {icon: 'sunny-outline',       iconBg: '#1C2A1C'},
+  2: {icon: 'restaurant-outline',  iconBg: '#1A2A25'},
+  3: {icon: 'moon-outline',        iconBg: '#1F1C2A'},
+  4: {icon: 'nutrition-outline',   iconBg: '#2A1C1C'},
+  5: {icon: 'fast-food-outline',   iconBg: '#1C1C2A'},
 };
 
-// meals.type 'pre_workout' / 'post_workout' get distinct styling from DB value
-const WORKOUT_MEAL_CONFIG: Record<string, {emoji: string; iconBg: string}> = {
-  pre_workout:  {emoji: '⚡', iconBg: '#1A2200'},
-  post_workout: {emoji: '💪', iconBg: '#001A1A'},
+const WORKOUT_MEAL_CONFIG: Record<string, {icon: IoniconsName; iconBg: string}> = {
+  pre_workout:  {icon: 'flash-outline',   iconBg: '#1A2200'},
+  post_workout: {icon: 'barbell-outline', iconBg: '#001A1A'},
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -166,7 +168,7 @@ export default function MealsScreen() {
                   </View>
                 </View>
                 <View style={s.flameBadge}>
-                  <Text style={{fontSize: 22}}>🔥</Text>
+                  <Ionicons name="flame-outline" size={22} color="#F97316"/>
                 </View>
               </View>
 
@@ -190,7 +192,7 @@ export default function MealsScreen() {
                 <View key={key} style={s.mealCard}>
                   <View style={s.mealHeader}>
                     <View style={[s.mealIcon, {backgroundColor: cfg.iconBg}]}>
-                      <Text style={s.mealIconEmoji}>{cfg.emoji}</Text>
+                      <Ionicons name={cfg.icon} size={20} color="#4ADE80"/>
                     </View>
 
                     <View style={s.mealTitleBlock}>
@@ -203,7 +205,7 @@ export default function MealsScreen() {
                         </View>
 
                         <TouchableOpacity style={s.infoBtn} onPress={() => setInfoMeal(meal)}>
-                          <Text style={s.infoBtnText}>ⓘ</Text>
+                          <Ionicons name="information-circle-outline" size={20} color="#888"/>
                         </TouchableOpacity>
                       </View>
 
@@ -266,7 +268,7 @@ function InfoSheet({meal, onClose}: {meal: MealSlot; onClose: () => void}) {
 
       <View style={s.sheetHeader}>
         <View style={[s.mealIcon, {backgroundColor: cfg.iconBg}]}>
-          <Text style={s.mealIconEmoji}>{cfg.emoji}</Text>
+          <Ionicons name={cfg.icon} size={20} color="#4ADE80"/>
         </View>
         <View style={{flex: 1}}>
           <Text style={s.sheetTitle}>{meal.meal_name}</Text>

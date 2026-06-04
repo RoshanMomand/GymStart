@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {Ionicons} from '@expo/vector-icons';
 import {FitnessPalette, FitnessSpacing, FitnessTypography} from '@/constants/fitness-design-tokens';
 
 interface WelcomeScreenProps {
@@ -16,7 +17,7 @@ export default function WelcomeScreen({onNavigateToRegister, onNavigateToLogin}:
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <View style={styles.heroPlaceholder}>
-            <Text style={styles.heroText}>💪</Text>
+            <Ionicons name="barbell-outline" size={64} color="#4ADE80"/>
           </View>
         </View>
 

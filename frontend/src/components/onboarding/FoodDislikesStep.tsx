@@ -1,5 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {FitnessPalette, FitnessSpacing} from '@/constants/fitness-design-tokens';
 
 interface FoodDislikesStepProps {
@@ -35,9 +36,10 @@ export default function FoodDislikesStep({value, onChange}: FoodDislikesStepProp
               onPress={() => toggle(option)}
               style={[styles.chip, selected && styles.chipActive]}
             >
-              <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                {selected ? '✓ ' : ''}{option}
-              </Text>
+              <View style={styles.chipContent}>
+                {selected && <Ionicons name="checkmark" size={12} color="#4ADE80"/>}
+                <Text style={[styles.chipText, selected && styles.chipTextActive]}>{option}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -76,6 +78,7 @@ const styles = StyleSheet.create({
     backgroundColor: FitnessPalette.primary,
     borderColor: FitnessPalette.primary,
   },
+  chipContent: {flexDirection: 'row', alignItems: 'center', gap: 4},
   chipText: {
     fontSize: 14,
     color: FitnessPalette.text.primary,

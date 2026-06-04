@@ -1,5 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {FitnessPalette, FitnessSpacing} from '@/constants/fitness-design-tokens';
 
 interface DietaryPreferencesStepProps {
@@ -49,9 +50,10 @@ export default function DietaryPreferencesStep({
               onPress={() => toggleDietary(option)}
               style={[styles.chip, selected && styles.chipActive]}
             >
-              <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                {selected ? '✓ ' : ''}{option}
-              </Text>
+              <View style={styles.chipContent}>
+                {selected && <Ionicons name="checkmark" size={12} color="#4ADE80"/>}
+                <Text style={[styles.chipText, selected && styles.chipTextActive]}>{option}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -67,9 +69,10 @@ export default function DietaryPreferencesStep({
               onPress={() => toggleAllergy(option)}
               style={[styles.chip, selected && styles.chipActive]}
             >
-              <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                {selected ? '✓ ' : ''}{option}
-              </Text>
+              <View style={styles.chipContent}>
+                {selected && <Ionicons name="checkmark" size={12} color="#4ADE80"/>}
+                <Text style={[styles.chipText, selected && styles.chipTextActive]}>{option}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -118,6 +121,11 @@ const styles = StyleSheet.create({
   chipActive: {
     backgroundColor: FitnessPalette.primary,
     borderColor: FitnessPalette.primary,
+  },
+  chipContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   chipText: {
     fontSize: 14,

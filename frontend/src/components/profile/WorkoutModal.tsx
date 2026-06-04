@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 
 type WorkoutPref = 'gym' | 'home' | 'outdoor';
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const GREEN  = '#4ADE80';
 const MUTED  = '#9CA3AF';
@@ -16,10 +18,10 @@ const WHITE  = '#FFFFFF';
 const INNER  = '#252525';
 const BORDER = '#2A2A2A';
 
-const OPTIONS: Array<{value: WorkoutPref; label: string; icon: string}> = [
-  {value: 'gym',     label: 'Gym Workout',      icon: '🏋️'},
-  {value: 'home',    label: 'Home Workout',      icon: '🏠'},
-  {value: 'outdoor', label: 'Outdoor Training',  icon: '🌲'},
+const OPTIONS: Array<{value: WorkoutPref; label: string; icon: IoniconsName}> = [
+  {value: 'gym',     label: 'Gym Workout',      icon: 'barbell-outline'},
+  {value: 'home',    label: 'Home Workout',      icon: 'home-outline'},
+  {value: 'outdoor', label: 'Outdoor Training',  icon: 'leaf-outline'},
 ];
 
 interface Props {
@@ -70,9 +72,9 @@ export default function WorkoutModal({visible, initialPref, initialDays, onSave,
                 onPress={() => setPref(opt.value)}
                 activeOpacity={0.7}
               >
-                <Text style={{fontSize: 20}}>{opt.icon}</Text>
+                <Ionicons name={opt.icon} size={20} color={active ? GREEN : MUTED}/>
                 <Text style={[s.optionText, active && {color: WHITE}]}>{opt.label}</Text>
-                {active && <Text style={s.check}>✓</Text>}
+                {active && <Ionicons name="checkmark" size={18} color={GREEN}/>}
               </TouchableOpacity>
             );
           })}
@@ -84,7 +86,7 @@ export default function WorkoutModal({visible, initialPref, initialDays, onSave,
               onPress={() => setDays(d => Math.max(1, d - 1))}
               disabled={days <= 1}
             >
-              <Text style={s.stepSymbol}>−</Text>
+              <Ionicons name="remove" size={20} color={WHITE}/>
             </TouchableOpacity>
             <View style={s.stepValueBox}>
               <Text style={s.stepValue}>{days}</Text>
@@ -95,7 +97,7 @@ export default function WorkoutModal({visible, initialPref, initialDays, onSave,
               onPress={() => setDays(d => Math.min(7, d + 1))}
               disabled={days >= 7}
             >
-              <Text style={s.stepSymbol}>+</Text>
+              <Ionicons name="add" size={20} color={WHITE}/>
             </TouchableOpacity>
           </View>
 

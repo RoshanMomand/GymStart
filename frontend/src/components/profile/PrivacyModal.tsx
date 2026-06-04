@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const GREEN = '#4ADE80';
 const MUTED  = '#9CA3AF';
@@ -29,22 +32,22 @@ export default function PrivacyModal({visible, onClose}: Props) {
           <Text style={s.title}>Privacy & Security</Text>
 
           <ScrollView showsVerticalScrollIndicator={false} style={{maxHeight: 360}}>
-            <Section icon="💾" title="Data We Store">
+            <Section icon="server-outline" title="Data We Store">
               Your profile includes body metrics, fitness goals, and food preferences. This data is stored
               securely on our servers and only used to personalise your experience.
             </Section>
 
-            <Section icon="🔍" title="How We Use It">
+            <Section icon="search-outline" title="How We Use It">
               Your data powers your personalised meal plans and workout suggestions. We never sell or share
               your personal data with third parties.
             </Section>
 
-            <Section icon="🛡️" title="Your Rights">
+            <Section icon="shield-outline" title="Your Rights">
               You can update or delete your data at any time from this profile screen. Logging out removes
               your active session. Deleting your account permanently removes all stored data.
             </Section>
 
-            <Section icon="🔒" title="Security">
+            <Section icon="lock-closed-outline" title="Security">
               All data is transmitted over HTTPS. Passwords are hashed and never stored in plain text.
               Authentication tokens expire automatically after inactivity.
             </Section>
@@ -59,12 +62,12 @@ export default function PrivacyModal({visible, onClose}: Props) {
   );
 }
 
-function Section({icon, title, children}: {icon: string; title: string; children: React.ReactNode}) {
+function Section({icon, title, children}: {icon: IoniconsName; title: string; children: React.ReactNode}) {
   return (
     <View style={p.section}>
       <View style={p.header}>
         <View style={p.iconBox}>
-          <Text style={{fontSize: 16}}>{icon}</Text>
+          <Ionicons name={icon} size={16} color="#888"/>
         </View>
         <Text style={p.title}>{title}</Text>
       </View>

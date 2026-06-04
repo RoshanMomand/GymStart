@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {Ionicons} from '@expo/vector-icons';
 import {
   Modal,
   Pressable,
@@ -170,9 +171,10 @@ export default function NutritionModal({
                             style={[s.chip, sel && s.chipActive]}
                             onPress={() => toggle(setFoodPrefs, opt)}
                           >
-                            <Text style={[s.chipText, sel && s.chipTextActive]}>
-                              {sel ? '✓ ' : ''}{opt}
-                            </Text>
+                            <View style={s.chipContent}>
+                              {sel && <Ionicons name="checkmark" size={12} color="#4ADE80"/>}
+                              <Text style={[s.chipText, sel && s.chipTextActive]}>{opt}</Text>
+                            </View>
                           </TouchableOpacity>
                         );
                       })}
@@ -190,7 +192,11 @@ export default function NutritionModal({
                           style={s.chipActive}
                           onPress={() => toggle(setFoodPrefs, p)}
                         >
-                          <Text style={s.chipTextActive}>✓ {p} ×</Text>
+                          <View style={s.chipContent}>
+                            <Ionicons name="checkmark" size={12} color="#4ADE80"/>
+                            <Text style={s.chipTextActive}>{p}</Text>
+                            <Ionicons name="close" size={12} color="#888"/>
+                          </View>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -229,9 +235,10 @@ export default function NutritionModal({
                       style={[s.chip, sel && s.chipActive]}
                       onPress={() => toggle(setDietary, opt)}
                     >
-                      <Text style={[s.chipText, sel && s.chipTextActive]}>
-                        {sel ? '✓ ' : ''}{opt}
-                      </Text>
+                      <View style={s.chipContent}>
+                        {sel && <Ionicons name="checkmark" size={12} color="#4ADE80"/>}
+                        <Text style={[s.chipText, sel && s.chipTextActive]}>{opt}</Text>
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -249,9 +256,10 @@ export default function NutritionModal({
                       style={[s.chip, sel && s.chipAllergyActive]}
                       onPress={() => toggle(setAllergies, opt)}
                     >
-                      <Text style={[s.chipText, sel && s.chipAllergyText]}>
-                        {sel ? '⚠️ ' : ''}{opt}
-                      </Text>
+                      <View style={s.chipContent}>
+                        {sel && <Ionicons name="alert-circle-outline" size={12} color="#F87171"/>}
+                        <Text style={[s.chipText, sel && s.chipAllergyText]}>{opt}</Text>
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -272,7 +280,10 @@ export default function NutritionModal({
                         style={s.dislikeChip}
                         onPress={() => setDislikes(prev => prev.filter(i => i !== d))}
                       >
-                        <Text style={s.dislikeText}>{d} ×</Text>
+                        <View style={s.chipContent}>
+                          <Text style={s.dislikeText}>{d}</Text>
+                          <Ionicons name="close" size={12} color="#EF4444"/>
+                        </View>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -335,6 +346,7 @@ const s = StyleSheet.create({
   chipRow:         {flexDirection: 'row', flexWrap: 'wrap', gap: 7},
   chip:            {paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: INNER, borderWidth: 1.5, borderColor: BORDER},
   chipActive:      {paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: PURPLE, borderWidth: 1.5, borderColor: PURPLE},
+  chipContent:     {flexDirection: 'row', alignItems: 'center', gap: 4},
   chipText:        {color: MUTED, fontSize: 12, fontWeight: '500'},
   chipTextActive:  {color: WHITE, fontSize: 12, fontWeight: '600'},
   chipAllergyActive:{paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: '#3B1515', borderWidth: 1.5, borderColor: '#7F1D1D'},

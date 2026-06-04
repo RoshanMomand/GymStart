@@ -6,32 +6,32 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class WorkoutPlan extends Model
+class WorkoutSession extends Model
 {
     protected $fillable = [
         'user_id',
-        'exercises',
-        'rest_day_exercises',
+        'workout_plan_id',
+        'day_name',
+        'trained_at',
         'notes',
-        'is_active',
     ];
 
     protected $casts = [
-        'exercises'          => 'array',
-        'rest_day_exercises' => 'array',
-        'is_active'          => 'boolean',
+        'trained_at' => 'datetime',
     ];
 
-    /**
-     * Get the user that this workout plan belongs to
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function sessions(): HasMany
+    public function workoutPlan(): BelongsTo
     {
-        return $this->hasMany(WorkoutSession::class);
+        return $this->belongsTo(WorkoutPlan::class);
+    }
+
+    public function sets(): HasMany
+    {
+        return $this->hasMany(WorkoutSet::class)->orderBy('set_number');
     }
 }

@@ -9,6 +9,9 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Ionicons} from '@expo/vector-icons';
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const GREEN = '#4ADE80';
 const MUTED  = '#9CA3AF';
@@ -23,7 +26,7 @@ interface Props {
 
 interface NotifRow {
   key: string;
-  icon: string;
+  icon: IoniconsName;
   label: string;
   sub: string;
   value: boolean;
@@ -54,9 +57,9 @@ export default function NotificationsModal({visible, onClose}: Props) {
   };
 
   const rows: NotifRow[] = [
-    {key: 'workout',  icon: '🏋️', label: 'Workout Reminders',  sub: 'Daily workout motivation',     value: workout,  toggle: () => setWorkout(v => !v)},
-    {key: 'meal',     icon: '🥗', label: 'Meal Reminders',      sub: "Don't forget your meals",       value: meal,     toggle: () => setMeal(v => !v)},
-    {key: 'progress', icon: '📊', label: 'Weekly Progress',     sub: 'Your weekly summary report',    value: progress, toggle: () => setProgress(v => !v)},
+    {key: 'workout',  icon: 'barbell-outline' as IoniconsName,       label: 'Workout Reminders',  sub: 'Daily workout motivation',     value: workout,  toggle: () => setWorkout(v => !v)},
+    {key: 'meal',     icon: 'restaurant-outline' as IoniconsName,    label: 'Meal Reminders',      sub: "Don't forget your meals",       value: meal,     toggle: () => setMeal(v => !v)},
+    {key: 'progress', icon: 'stats-chart-outline' as IoniconsName,   label: 'Weekly Progress',     sub: 'Your weekly summary report',    value: progress, toggle: () => setProgress(v => !v)},
   ];
 
   return (
@@ -72,7 +75,7 @@ export default function NotificationsModal({visible, onClose}: Props) {
               {i > 0 && <View style={s.divider} />}
               <View style={s.row}>
                 <View style={s.iconBox}>
-                  <Text style={{fontSize: 18}}>{row.icon}</Text>
+                  <Ionicons name={row.icon} size={20} color="#888"/>
                 </View>
                 <View style={{flex: 1}}>
                   <Text style={s.rowLabel}>{row.label}</Text>

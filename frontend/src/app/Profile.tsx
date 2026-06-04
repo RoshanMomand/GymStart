@@ -10,7 +10,10 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, {Circle, Defs, LinearGradient, Stop} from 'react-native-svg';
+import {Ionicons} from '@expo/vector-icons';
 import {useAuth} from '@/contexts/AuthContext';
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 import EditProfileModal    from '@/components/profile/EditProfileModal';
 import WorkoutModal        from '@/components/profile/WorkoutModal';
@@ -61,10 +64,10 @@ const GOAL_LABELS: Record<string, string> = {
   maintain:     'Maintenance',
 };
 
-const GOAL_ICONS: Record<string, string> = {
-  lose_weight:  '🔥',
-  build_muscle: '💪',
-  maintain:     '⚖️',
+const GOAL_ICONS: Record<string, IoniconsName> = {
+  lose_weight:  'flame-outline',
+  build_muscle: 'barbell-outline',
+  maintain:     'scale-outline',
 };
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -178,7 +181,10 @@ function Chip({label, variant = 'default'}: {label: string; variant?: 'default' 
   if (variant === 'red') {
     return (
       <View style={[chipStyles.base, chipStyles.allergy]}>
-        <Text style={[chipStyles.text, chipStyles.allergyText]}>⚠️ {label}</Text>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+          <Ionicons name="alert-circle-outline" size={12} color="#EF4444"/>
+          <Text style={[chipStyles.text, chipStyles.allergyText]}>{label}</Text>
+        </View>
       </View>
     );
   }
@@ -200,10 +206,10 @@ function StatBox({label, value, unit}: {label: string; value: string; unit?: str
   );
 }
 
-function SectionHeader({icon, title}: {icon: string; title: string}) {
+function SectionHeader({icon, title}: {icon: IoniconsName; title: string}) {
   return (
     <View style={sectionHeaderStyles.row}>
-      <Text style={sectionHeaderStyles.icon}>{icon}</Text>
+      <Ionicons name={icon} size={16} color="#888"/>
       <Text style={sectionHeaderStyles.title}>{title}</Text>
     </View>
   );
@@ -215,7 +221,7 @@ function SettingsRow({
   onPress,
   destructive = false,
 }: {
-  icon: string;
+  icon: IoniconsName;
   label: string;
   onPress?: () => void;
   destructive?: boolean;
@@ -223,12 +229,12 @@ function SettingsRow({
   return (
     <TouchableOpacity style={settingsRowStyles.row} onPress={onPress} activeOpacity={0.55}>
       <View style={[settingsRowStyles.iconBox, destructive && settingsRowStyles.destructiveBox]}>
-        <Text style={{fontSize: 16}}>{icon}</Text>
+        <Ionicons name={icon} size={18} color={destructive ? '#EF4444' : '#888'}/>
       </View>
       <Text style={[settingsRowStyles.label, destructive && settingsRowStyles.destructive]}>
         {label}
       </Text>
-      {!destructive && <Text style={settingsRowStyles.chevron}>›</Text>}
+      {!destructive && <Ionicons name="chevron-forward" size={18} color="#555"/>}
     </TouchableOpacity>
   );
 }
@@ -402,7 +408,7 @@ export default function ProfileScreen() {
               </View>
               {profileData?.fitness_goal ? (
                 <View style={s.goalBadge}>
-                  <Text style={s.goalBadgeIcon}>{GOAL_ICONS[profileData.fitness_goal]}</Text>
+                  <Ionicons name={GOAL_ICONS[profileData.fitness_goal] ?? 'barbell-outline'} size={16} color="#4ADE80"/>
                   <Text style={s.goalBadgeText}>{GOAL_LABELS[profileData.fitness_goal]}</Text>
                 </View>
               ) : null}
@@ -420,7 +426,7 @@ export default function ProfileScreen() {
             {/* ── Body stats card ──────────────────────────────────────────────── */}
             {profileData ? (
               <View style={s.card}>
-                <SectionHeader icon="📊" title="Body Stats" />
+                <SectionHeader icon="stats-chart-outline" title="Body Stats" />
                 <View style={s.bodyRow}>
                   <View style={s.bodyItem}>
                     <Text style={s.bodyValue}>{profileData.height_cm}</Text>
@@ -442,7 +448,7 @@ export default function ProfileScreen() {
                   </View>
                 </View>
                 <View style={s.activityBadge}>
-                  <Text style={{fontSize: 13}}>⚡</Text>
+                  <Ionicons name="flash-outline" size={14} color="#888"/>
                   <Text style={s.activityBadgeText}>
                     {ACTIVITY_LABELS[profileData.activity_level] ?? '—'}
                   </Text>
@@ -453,7 +459,7 @@ export default function ProfileScreen() {
             {/* ── Nutrition targets card ───────────────────────────────────────── */}
             {nutrition ? (
               <View style={s.card}>
-                <SectionHeader icon="🔥" title="Nutrition Targets" />
+                <SectionHeader icon="flame-outline" title="Nutrition Targets" />
                 <View style={s.calorieRow}>
                   <Text style={s.calorieBig}>{nutrition.calories.toLocaleString()}</Text>
                   <Text style={s.calorieUnit}>kcal / day</Text>
@@ -467,7 +473,7 @@ export default function ProfileScreen() {
             {/* ── Workout card ─────────────────────────────────────────────────── */}
             {profileData ? (
               <View style={s.card}>
-                <SectionHeader icon="🏋️" title="Workout" />
+                <SectionHeader icon="barbell-outline" title="Workout" />
                 <View style={s.workoutRow}>
                   <View style={s.workoutBadge}>
                     <Text style={s.workoutBadgeText}>
@@ -482,7 +488,7 @@ export default function ProfileScreen() {
             {/* ── Food preferences card ────────────────────────────────────────── */}
             {profileData && hasPreferences ? (
               <View style={s.card}>
-                <SectionHeader icon="🥦" title="Food Preferences" />
+                <SectionHeader icon="leaf-outline" title="Food Preferences" />
 
                 {(profileData.food_preferences?.length ?? 0) > 0 && (
                   <View style={s.chipSection}>
@@ -524,14 +530,14 @@ export default function ProfileScreen() {
 
             {/* ── Settings card ────────────────────────────────────────────────── */}
             <View style={s.card}>
-              <SectionHeader icon="⚙️" title="Settings" />
-              <SettingsRow icon="👤" label="Edit Profile"           onPress={() => setActiveModal('editProfile')} />
-              <SettingsRow icon="🏋️" label="Workout Preferences"    onPress={() => profileData && setActiveModal('workout')} />
-              <SettingsRow icon="🥗" label="Nutrition Preferences"  onPress={() => profileData && setActiveModal('nutrition')} />
-              <SettingsRow icon="🔔" label="Notifications"          onPress={() => setActiveModal('notifications')} />
-              <SettingsRow icon="🔒" label="Privacy & Security"     onPress={() => setActiveModal('privacy')} />
+              <SectionHeader icon="settings-outline" title="Settings" />
+              <SettingsRow icon="person-outline"        label="Edit Profile"           onPress={() => setActiveModal('editProfile')} />
+              <SettingsRow icon="barbell-outline"       label="Workout Preferences"    onPress={() => profileData && setActiveModal('workout')} />
+              <SettingsRow icon="nutrition-outline"     label="Nutrition Preferences"  onPress={() => profileData && setActiveModal('nutrition')} />
+              <SettingsRow icon="notifications-outline" label="Notifications"          onPress={() => setActiveModal('notifications')} />
+              <SettingsRow icon="lock-closed-outline"   label="Privacy & Security"     onPress={() => setActiveModal('privacy')} />
               <View style={s.settingsDivider} />
-              <SettingsRow icon="🚪" label="Log Out" destructive onPress={signOut} />
+              <SettingsRow icon="log-out-outline" label="Log Out" destructive onPress={signOut} />
             </View>
 
             <Text style={s.versionText}>GymStart · v1.0.0</Text>

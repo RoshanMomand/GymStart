@@ -177,6 +177,29 @@ class ExerciseDbService
     }
 
     /**
+     * Get exercises filtered by body part AND equipment type (client-side filter)
+     */
+    public function getExercisesByBodyPartAndEquipment(
+        string $bodyPart,
+        array $equipmentTypes,
+        int $limit = 5
+    ): array {
+        $exercises = $this->getExercisesByBodyPart($bodyPart, $limit * 8);
+
+        if (isset($exercises['error']) || empty($exercises)) {
+            return [];
+        }
+
+        $filtered = collect($exercises)
+            ->filter(fn($ex) => in_array($ex['equipment'] ?? '', $equipmentTypes))
+            ->take($limit)
+            ->values()
+            ->toArray();
+
+        return count($filtered) >= 1 ? $filtered : array_slice($exercises, 0, $limit);
+    }
+
+    /**
      * Format a single exercise from API response
      *
      * @param array $exercise
