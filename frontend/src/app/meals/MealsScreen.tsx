@@ -168,7 +168,7 @@ export default function MealsScreen() {
                   </View>
                 </View>
                 <View style={s.flameBadge}>
-                  <Ionicons name="flame-outline" size={22} color="#F97316"/>
+                  {/* <Ionicons name="flame-outline" size={22} color="#F97316"/> */}
                 </View>
               </View>
 
@@ -191,8 +191,8 @@ export default function MealsScreen() {
               return (
                 <View key={key} style={s.mealCard}>
                   <View style={s.mealHeader}>
-                    <View style={[s.mealIcon, {backgroundColor: cfg.iconBg}]}>
-                      <Ionicons name={cfg.icon} size={20} color="#4ADE80"/>
+                    <View style={[s.mealIcon, {/* backgroundColor: cfg.iconBg */}]}>
+                      {/* <Ionicons name={cfg.icon} size={20} color="#4ADE80"/> */}
                     </View>
 
                     <View style={s.mealTitleBlock}>
@@ -267,8 +267,8 @@ function InfoSheet({meal, onClose}: {meal: MealSlot; onClose: () => void}) {
       <View style={s.handleBar}/>
 
       <View style={s.sheetHeader}>
-        <View style={[s.mealIcon, {backgroundColor: cfg.iconBg}]}>
-          <Ionicons name={cfg.icon} size={20} color="#4ADE80"/>
+        <View style={[s.mealIcon, {/* backgroundColor: cfg.iconBg */}]}>
+          {/* <Ionicons name={cfg.icon} size={20} color="#4ADE80"/> */}
         </View>
         <View style={{flex: 1}}>
           <Text style={s.sheetTitle}>{meal.meal_name}</Text>
