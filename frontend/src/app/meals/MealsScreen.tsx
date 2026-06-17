@@ -168,7 +168,7 @@ export default function MealsScreen() {
                   </View>
                 </View>
                 <View style={s.flameBadge}>
-                  {/* <Ionicons name="flame-outline" size={22} color="#F97316"/> */}
+                   <Ionicons name="flame-outline" size={22} color="#F97316"/>
                 </View>
               </View>
 

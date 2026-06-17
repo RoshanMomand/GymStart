@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,61 +14,25 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
 import {useAuth} from '@/contexts/AuthContext';
+import {MealPlan, Profile} from '@/types/home';
+import {
+  CARD,
+  ERROR,
+  formatLastUpdated,
+  formatWeight,
+  getGreeting,
+  goalWeight,
+  GREEN,
+  INNER,
+  MUTED,
+  TEXT,
+  workoutLabel,
+} from '@/utils/homeHelpers';
+import {fetchMealPlan, fetchProfile, updateWeight} from '@/utils/homeApi';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface Profile {
-  weight_kg: number;
-  fitness_goal: 'lose_weight' | 'build_muscle' | 'maintain';
-  training_days: number;
-  workout_preference: string;
-}
-
-interface MealFood {
-  name: string;
-  calories: number;
-}
-
-interface MealSlot {
-  meal_name: string;
-  calories: number;
-  foods: MealFood[];
-}
-
-interface MealPlan {
-  goal: string;
-  day_types: Array<{
-    type: string;
-    meals: MealSlot[]
-  }>;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const API = 'http://127.0.0.1:8000/api';
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
-function goalWeight(profile: Profile): number {
-  const w = profile.weight_kg;
-  if (profile.fitness_goal === 'lose_weight') return Math.round((w - 5) * 10) / 10;
-  if (profile.fitness_goal === 'build_muscle') return Math.round((w + 5) * 10) / 10;
-  return w;
-}
-
-function formatWeight(n: number): string {
-  return n.toString().replace('.', ',');
-}
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   const {user} = useAuth();
@@ -85,46 +49,27 @@ export default function HomeScreen() {
   const [weightInput, setWeightInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isTrainingDay, setIsTrainingDay] = useState(true);
 
-  useEffect(() => {
-    loadAll();
-  }, []);
-
-  const authHeaders = async () => {
-    const token = await AsyncStorage.getItem('authToken');
-    return {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json'
-    };
-  };
+  useFocusEffect(useCallback(() => {
+    loadAll()
+  }, []));
 
   const loadAll = async () => {
     try {
-      const headers = await authHeaders();
+      const [profileData, planData] = await Promise.all([fetchProfile(), fetchMealPlan()]);
+      if (profileData) {
+        setProfile(profileData);
+        setCurrentWeight(profileData.weight_kg);
 
-      const [profileRes, planRes] = await Promise.all([
-        fetch(`${API}/onboarding/profile`, {headers}),
-        fetch(`${API}/mealplans`, {headers}),
-      ]);
-
-      if (profileRes.ok) {
-        const json = await profileRes.json();
-        const data = json.data as Profile;
-        setProfile(data);
-        setCurrentWeight(data.weight_kg);
-
-        const ts = await AsyncStorage.getItem('weightUpdatedAt');
-        setLastUpdated(ts ? formatLastUpdated(ts) : 'from onboarding');
+        const weightUpdatedAt = await AsyncStorage.getItem('weightUpdatedAt');
+        weightUpdatedAt && setLastUpdated(formatLastUpdated(weightUpdatedAt));
 
         const storedDelta = await AsyncStorage.getItem('weightDelta');
-        if (storedDelta) setDeltaKg(parseFloat(storedDelta));
+        storedDelta && setDeltaKg(parseFloat(storedDelta));
       }
 
-      if (planRes.ok) {
-        const json = await planRes.json();
-        setMealPlan(json.data);
-      }
+      if (planData) setMealPlan(planData);
     } catch (_) {
       // silently degrade
     } finally {
@@ -133,34 +78,36 @@ export default function HomeScreen() {
   };
 
   const handleUpdateWeight = async () => {
-    const value = parseFloat(weightInput.replace(',', '.'));
-    if (isNaN(value) || value < 30 || value > 500) return;
+    const weightAsText = weightInput.replace(',', '.');
+    const newWeight = Math.round(parseFloat(weightAsText) * 100) / 100;
+    const isValidWeight = !isNaN(newWeight) && newWeight >= 30 && newWeight <= 200;
+
+    // The user cannot adjust the weight lower than 30KG or higher than 200KG
+    // or a value that is not a number. This is to prevent accidental inputs and ensure data integrity.
+    if (!isValidWeight) {
+      setSaveError('Enter a valid weight between 30 and 200 kg');
+      return;
+    }
 
     setSaving(true);
     setSaveError(null);
     try {
-      const headers = await authHeaders();
-      const res = await fetch(`${API}/profile/weight`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({weight_kg: value}),
-      });
+      const result = await updateWeight(newWeight);
 
-      if (!res.ok) {
-        const body = await res.json();
-        setSaveError(body.message ?? 'Something went wrong');
+      if ('error' in result) {
+        setSaveError(result.error);
         return;
       }
 
-      const json = await res.json();
-      const delta: number | null = json.data?.delta_kg ?? null;
+      setCurrentWeight(newWeight);
+      setDeltaKg(result.delta_kg);
 
-      setCurrentWeight(value);
-      setDeltaKg(delta);
+      const weightUpdatedAt = new Date().toISOString();
+      await AsyncStorage.setItem('weightUpdatedAt', weightUpdatedAt);
 
-      const now = new Date().toISOString();
-      await AsyncStorage.setItem('weightUpdatedAt', now);
-      if (delta !== null) await AsyncStorage.setItem('weightDelta', String(delta));
+      if (result.delta_kg !== null) {
+        await AsyncStorage.setItem('weightDelta', String(result.delta_kg));
+      }
 
       setLastUpdated('just now');
       setShowModal(false);
@@ -172,194 +119,164 @@ export default function HomeScreen() {
     }
   };
 
-  // Today's meals: use training day if available
-  const todayType = mealPlan?.day_types.find(d => d.type === 'training') ?? mealPlan?.day_types[0];
-  const breakfast = todayType?.meals.find(m => m.meal_name === 'Breakfast');
-  const lunch = todayType?.meals.find(m => m.meal_name === 'Lunch');
-
-  const mealFoodLabel = (meal?: MealSlot) =>
-    meal?.foods.slice(0, 2).map(f => f.name).join(' & ') ?? '';
+  const selectedDayType = isTrainingDay ? 'training' : 'rest';
+  const todayType = mealPlan?.day_types.find(dayType => dayType.type === selectedDayType);
+  const todayCalories = todayType?.calories ?? 0;
+  const firstTwoMeals = todayType?.meals.slice(0, 2) ?? [];
 
   const goal = profile ? goalWeight(profile) : 0;
-  const goalDiff = profile ? Math.abs(currentWeight - goal) : 0;
-  const isLosing = profile?.fitness_goal === 'lose_weight';
-
-  const workoutLabel = profile?.workout_preference
-    ? profile.workout_preference.charAt(0).toUpperCase() + profile.workout_preference.slice(1) + ' Workout'
-    : 'Training Day';
 
   return (
-    <View style={s.root}>
+    <View style={styles.root}>
       <SafeAreaView style={{flex: 1}}>
 
-        <View style={s.header}>
-          <View style={s.headerCenter}>
+        <View style={styles.header}>
+          <View style={styles.headerCenter}>
             <Text
-              style={s.greeting}>{getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}</Text>
-            <Text style={s.greetingSub}>Ready for today?</Text>
+              style={styles.greeting}>{getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}</Text>
+            <Text style={styles.greetingSub}>Ready for today?</Text>
           </View>
 
-          <View style={s.bell}>
+          <View style={styles.bell}>
             <Ionicons
               name="notifications-outline"
               size={22}
               color="#888"/>
           </View>
-          {/*<View style={s.bell}/>*/}
         </View>
 
-        {loading ? (
-          <View style={s.center}>
-            <ActivityIndicator color="#4ADE80" size="large"/>
-          </View>
-        ) : (
-          <ScrollView showsVerticalScrollIndicator={false}
-                      contentContainerStyle={{gap: 12, paddingBottom: 24}}>
+        {!loading && profile && mealPlan && (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{gap: 20, paddingBottom: 24}}
+          >
 
-            {/* ── Today's Progress ─────────────────────────────── */}
-            <View style={s.card}>
-              <Text style={s.cardTitle}>Today's Progress</Text>
-              <View style={s.progressRow}>
-                <View style={s.progressBox}>
-                  {/* <Ionicons name="flame-outline" size={24} color="#F97316"/> */}
-                  <Text style={s.progressLabel}>Calories</Text>
-                  <Text style={s.progressValue}>0</Text>
-                  <Text style={s.progressSub}>kcal burned</Text>
+            {/* Today's Progress */}
+            <View style={styles.card}>
+              <Text style={styles.cardSectionTitle}>Today's Progress</Text>
+              <View style={styles.progressRow}>
+                <View style={styles.progressBox}>
+                  <Text style={styles.progressLabel}>Calories</Text>
+                  <Text style={styles.progressValue}>0</Text>
+                  <Text style={styles.progressSub}>kcal burned</Text>
                 </View>
-                <View style={s.progressBox}>
-                  {/* <Ionicons name="barbell-outline" size={24} color="#4ADE80"/> */}
-                  <Text style={s.progressLabel}>Workouts</Text>
+                <View style={styles.progressBox}>
+                  <Text style={styles.progressLabel}>Workouts</Text>
                   <Text
-                    style={s.progressValue}>{profile?.training_days ?? 0}/wk</Text>
-                  <Text style={s.progressSub}>planned</Text>
+                    style={styles.progressValue}>{profile.training_days}/wk</Text>
+                  <Text style={styles.progressSub}>planned</Text>
                 </View>
               </View>
             </View>
 
-            {/* ── Your Weight ──────────────────────────────────── */}
-            <View style={s.card}>
-              <View style={s.cardRow}>
-                <View style={[s.iconCircle, {/* backgroundColor: '#6D28D9' */}]}>
-                  {/* <Ionicons name="scale-outline" size={20} color="#fff"/> */}
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={s.cardSectionTitle}>Your Weight</Text>
-                  <Text style={s.cardSectionSub}>Last
-                    updated {lastUpdated || 'from onboarding'}</Text>
-                </View>
-              </View>
-
-              <View style={s.weightRow}>
-                <Text style={s.weightNumber}>
-                  {formatWeight(currentWeight)}
-                  <Text style={s.weightUnit}>kg</Text>
+            {/* Your Weight */}
+            <View style={styles.card}>
+              <Text style={styles.cardSectionTitle}>Your Weight</Text>
+              <Text style={styles.cardSectionSub}>Last updated {lastUpdated}</Text>
+              <View style={styles.weightRow}>
+                <Text style={styles.weightNumber}>{formatWeight(currentWeight)}
+                  <Text style={styles.weightUnit}>kg</Text>
                 </Text>
                 <View style={{alignItems: 'flex-end'}}>
-                  <Text style={s.goalLabel}>Goal</Text>
-                  <Text style={s.goalValue}>{formatWeight(goal)} kg</Text>
+                  <Text style={styles.goalLabel}>Goal</Text>
+                  <Text style={styles.goalValue}>{formatWeight(goal)} kg</Text>
                 </View>
               </View>
 
               {deltaKg !== null && (
-                <View style={s.deltaRow}>
-                  {/* <Ionicons name={deltaKg <= 0 ? 'trending-down-outline' : 'trending-up-outline'} size={16} color={deltaKg <= 0 ? '#4ADE80' : '#F87171'}/> */}
-                  <Text style={[s.deltaText, {color: deltaKg <= 0 ? '#4ADE80' : '#F87171'}]}>
+                <View style={styles.deltaRow}>
+                  <Text style={[styles.deltaText, {color: deltaKg <= 0 ? GREEN : ERROR}]}>
                     {deltaKg > 0 ? '+' : ''}{deltaKg.toFixed(1)} kg since last update
                   </Text>
                 </View>
               )}
 
-              <TouchableOpacity style={s.greenBtn} onPress={() => {
+              <TouchableOpacity style={styles.greenButton} onPress={() => {
                 setWeightInput(String(currentWeight).replace('.', ','));
                 setShowModal(true);
               }}>
-                <Text style={s.greenBtnText}>Update Weight</Text>
+                <Text style={styles.greenButtonText}>Update Weight</Text>
               </TouchableOpacity>
             </View>
 
-            {/* ── Today's Workout ──────────────────────────────── */}
-            <View style={s.card}>
-              <View style={s.cardRow}>
-                <View style={[s.iconCircle, {/* backgroundColor: '#1D4ED8' */}]}>
-                  {/* <Ionicons name="barbell-outline" size={20} color="#fff"/> */}
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={s.cardSectionTitle}>Today's Workout</Text>
-                  <Text style={s.cardSectionSub}>{workoutLabel}</Text>
-                </View>
-              </View>
-              <TouchableOpacity style={s.greenBtn}
-                                onPress={() => navigation.navigate('Workout')}>
-                <Text style={s.greenBtnText}>View</Text>
+            {/* Today's Workout */}
+            <View style={styles.card}>
+              <Text style={styles.cardSectionTitle}>Today's Workout</Text>
+              <Text style={styles.cardSectionSub}>{workoutLabel(profile)}</Text>
+              <TouchableOpacity
+                style={styles.greenButton}
+                onPress={() => navigation.navigate('Workout')}>
+                <Text style={styles.greenButtonText}>View</Text>
               </TouchableOpacity>
             </View>
 
-            {/* ── Today's Meals ─────────────────────────────────── */}
-            <View style={s.card}>
-              <View style={s.cardRow}>
-                <View style={[s.iconCircle, {/* backgroundColor: '#92400E' */}]}>
-                  {/* <Ionicons name="restaurant-outline" size={20} color="#fff"/> */}
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={s.cardSectionTitle}>Today's Meals</Text>
-                  <Text style={s.cardSectionSub}>
-                    {todayType ? `${todayType.meals.length} meals planned` : 'No plan yet'}
+            {/* Today's Meals */}
+            <View style={styles.card}>
+              <Text style={styles.cardSectionTitle}>Today's Meals</Text>
+
+              <View style={styles.dayToggle}>
+                <TouchableOpacity
+                  style={[styles.dayToggleButton, isTrainingDay && styles.dayToggleButtonActive]}
+                  onPress={() => setIsTrainingDay(true)}
+                >
+                  <Text style={[styles.dayToggleText, isTrainingDay && styles.dayToggleTextActive]}>
+                    Training
                   </Text>
-                </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dayToggleButton, !isTrainingDay && styles.dayToggleButtonActive]}
+                  onPress={() => setIsTrainingDay(false)}
+                >
+                  <Text
+                    style={[styles.dayToggleText, !isTrainingDay && styles.dayToggleTextActive]}>
+                    Rest
+                  </Text>
+                </TouchableOpacity>
               </View>
 
-              {breakfast && (
-                <View style={s.mealRow}>
-                  <View style={[s.mealIconBox, {/* backgroundColor: '#F97316' */}]}>
-                    {/* <Ionicons name="cafe-outline" size={16} color="#fff"/> */}
-                  </View>
-                  <View style={{flex: 1}}>
-                    <Text style={s.mealName}>Breakfast</Text>
-                    <Text style={s.mealDesc}>{mealFoodLabel(breakfast)}</Text>
-                  </View>
-                  <Text style={s.mealCal}>{breakfast.calories} cal</Text>
-                </View>
-              )}
+              <Text style={styles.cardSectionSub}>{todayCalories} kcal today</Text>
 
-              {lunch && (
-                <View style={s.mealRow}>
-                  <View style={[s.mealIconBox, {/* backgroundColor: '#16A34A' */}]}>
-                    {/* <Ionicons name="leaf-outline" size={16} color="#fff"/> */}
-                  </View>
-                  <View style={{flex: 1}}>
-                    <Text style={s.mealName}>Lunch</Text>
-                    <Text style={s.mealDesc}>{mealFoodLabel(lunch)}</Text>
-                  </View>
-                  <Text style={s.mealCal}>{lunch.calories} cal</Text>
+              {firstTwoMeals.map((meal, index) => (
+                <View key={index} style={styles.mealPreviewRow}>
+                  <Text style={styles.mealPreviewName}>{meal.meal_name}</Text>
+                  <Text style={styles.mealPreviewCalories}>{meal.calories} kcal</Text>
                 </View>
-              )}
+              ))}
 
-              <TouchableOpacity style={s.greenBtn}
+              <TouchableOpacity style={styles.greenButton}
                                 onPress={() => navigation.navigate('Meal')}>
-                <Text style={s.greenBtnText}>View All Meals</Text>
+                <Text style={styles.greenButtonText}>View Meals</Text>
               </TouchableOpacity>
             </View>
 
           </ScrollView>
         )}
+
+        {loading && (
+          <View style={styles.center}>
+            <ActivityIndicator
+              color={GREEN}
+              size="large"/>
+          </View>
+        )}
       </SafeAreaView>
 
-      {/* ── Weight Update Modal ──────────────────────────────────── */}
+      {/* ── Weight Update Modal */}
       <Modal visible={showModal} transparent animationType="slide"
              onRequestClose={() => setShowModal(false)}>
-        <Pressable style={s.modalOverlay} onPress={() => setShowModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowModal(false)}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <Pressable style={s.modalCard} onPress={e => e.stopPropagation()}>
-              <Text style={s.modalTitle}>Update Weight</Text>
-              <Text style={s.modalSub}>Enter your current weight in kg</Text>
+            <Pressable style={styles.modalCard} onPress={event => event.stopPropagation()}>
+              <Text style={styles.modalTitle}>Update Weight</Text>
+              <Text style={styles.modalSub}>Enter your current weight in kg</Text>
 
               {saveError && (
-                <Text style={s.modalError}>{saveError}</Text>
+                <Text style={styles.modalError}>{saveError}</Text>
               )}
 
               <TextInput
-                style={s.modalInput}
+                style={styles.modalInput}
                 value={weightInput}
                 onChangeText={setWeightInput}
                 keyboardType="decimal-pad"
@@ -369,18 +286,18 @@ export default function HomeScreen() {
                 selectTextOnFocus
               />
 
-              <View style={s.modalBtns}>
-                <TouchableOpacity style={s.modalCancel}
-                                  onPress={() => setShowModal(false)}>
-                  <Text style={s.modalCancelText}>Cancel</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancel}
+                  onPress={() => setShowModal(false)}>
+                  <Text style={styles.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[s.modalSave, saving && {opacity: 0.5}]}
+                  style={[styles.greenButton, {flex: 1}, saving && {opacity: 0.5}]}
                   onPress={handleUpdateWeight}
                   disabled={saving}
                 >
-                  <Text
-                    style={s.modalSaveText}>{saving ? 'Saving…' : 'Save'}</Text>
+                  <Text style={styles.greenButtonText}>{saving ? 'Saving…' : 'Save'}</Text>
                 </TouchableOpacity>
               </View>
             </Pressable>
@@ -391,28 +308,17 @@ export default function HomeScreen() {
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatLastUpdated(isoString: string): string {
-  const diff = (Date.now() - new Date(isoString).getTime()) / 1000;
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return 'today';
-  const days = Math.floor(diff / 86400);
-  return days === 1 ? 'yesterday' : `${days} days ago`;
-}
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const GREEN = '#4ADE80';
-const CARD = '#1A1A1A';
-const INNER = '#252525';
-const TEXT = '#FFFFFF';
-const MUTED = '#9CA3AF';
-
-const s = StyleSheet.create({
-  root: {flex: 1, backgroundColor: '#0D0D0D', paddingHorizontal: 16},
-  center: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#0D0D0D',
+    paddingHorizontal: 16
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
 
   // Header
   header: {
@@ -429,25 +335,43 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  bellIcon: {fontSize: 18},
-  headerCenter: {flex: 1, alignItems: 'center'},
-  greeting: {color: TEXT, fontSize: 20, fontWeight: '700'},
-  greetingSub: {color: MUTED, fontSize: 13, marginTop: 2},
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center'
+  },
+  greeting: {
+    color: TEXT,
+    fontSize: 20,
+    fontWeight: '700'
+  },
+  greetingSub: {
+    color: MUTED,
+    fontSize: 13,
+    marginTop: 2
+  },
 
   // Cards
   card: {backgroundColor: CARD, borderRadius: 16, padding: 16, gap: 12},
-  cardTitle: {color: TEXT, fontSize: 16, fontWeight: '600'},
-  cardRow: {flexDirection: 'row', alignItems: 'center', gap: 12},
   cardSectionTitle: {color: TEXT, fontSize: 15, fontWeight: '600'},
   cardSectionSub: {color: MUTED, fontSize: 12, marginTop: 2},
-  iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center'
+
+  // Day toggle
+  dayToggle: {flexDirection: 'row', backgroundColor: INNER, borderRadius: 10, padding: 4, gap: 4},
+  dayToggleButton: {flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center'},
+  dayToggleButtonActive: {backgroundColor: GREEN},
+  dayToggleText: {color: MUTED, fontWeight: '600', fontSize: 13},
+  dayToggleTextActive: {color: '#111'},
+
+  // Meal preview
+  mealPreviewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: INNER
   },
-  iconText: {fontSize: 20},
+  mealPreviewName: {color: TEXT, fontSize: 13, fontWeight: '500'},
+  mealPreviewCalories: {color: MUTED, fontSize: 13},
 
   // Progress
   progressRow: {flexDirection: 'row', gap: 12},
@@ -458,7 +382,6 @@ const s = StyleSheet.create({
     padding: 14,
     gap: 4
   },
-  progressIcon: {fontSize: 20},
   progressLabel: {color: MUTED, fontSize: 12},
   progressValue: {color: TEXT, fontSize: 26, fontWeight: '700'},
   progressSub: {color: MUTED, fontSize: 11},
@@ -477,40 +400,18 @@ const s = StyleSheet.create({
   deltaText: {fontSize: 13, fontWeight: '500'},
 
   // Buttons
-  greenBtn: {
+  greenButton: {
     backgroundColor: GREEN,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center'
   },
-  greenBtnText: {color: '#111', fontWeight: '700', fontSize: 15},
+  greenButtonText: {
+    color: '#111',
+    fontWeight: '700',
+    fontSize: 15
+  },
 
-  // Meals
-  mealRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: INNER,
-    borderRadius: 12,
-    padding: 12
-  },
-  mealIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  mealIconText: {fontSize: 18},
-  mealName: {color: TEXT, fontWeight: '600', fontSize: 14},
-  mealDesc: {color: MUTED, fontSize: 12, marginTop: 2},
-  mealCal: {color: MUTED, fontSize: 12},
-  emptyText: {
-    color: MUTED,
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: 8
-  },
   // Modal
   modalOverlay: {
     flex: 1,
@@ -538,7 +439,10 @@ const s = StyleSheet.create({
     borderWidth: 2,
     borderColor: GREEN,
   },
-  modalBtns: {flexDirection: 'row', gap: 12},
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12
+  },
   modalCancel: {
     flex: 1,
     backgroundColor: INNER,
@@ -547,12 +451,4 @@ const s = StyleSheet.create({
     alignItems: 'center'
   },
   modalCancelText: {color: MUTED, fontWeight: '600'},
-  modalSave: {
-    flex: 1,
-    backgroundColor: GREEN,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center'
-  },
-  modalSaveText: {color: '#111', fontWeight: '700'},
 });

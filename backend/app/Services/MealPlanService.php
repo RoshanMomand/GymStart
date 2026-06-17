@@ -16,22 +16,18 @@
             3 => [
                 1 => 0.30,
                 2 => 0.40,
-                3 => 0.30,
-            ],
+                3 => 0.30,],
             4 => [
                 1 => 0.25,
                 2 => 0.25,
                 3 => 0.25,
-                4 => 0.25,
-            ],
+                4 => 0.25,],
             5 => [
                 1 => 0.20,
                 2 => 0.20,
                 3 => 0.20,
                 4 => 0.20,
-                5 => 0.20,
-            ],
-        ];
+                5 => 0.20,],];
 
         // Keyword→category mapping for food classification
         private const PROTEIN_KEYWORDS = [
@@ -48,8 +44,7 @@
             'cottage',
             'yogurt',
             'protein',
-            'fish'
-        ];
+            'fish'];
         private const CARB_KEYWORDS = [
             'rice',
             'pasta',
@@ -58,8 +53,7 @@
             'quinoa',
             'bread',
             'wrap',
-            'sweet'
-        ];
+            'sweet'];
         private const VEGETABLE_KEYWORDS = [
             'broccoli',
             'pepper',
@@ -68,8 +62,7 @@
             'carrot',
             'cauliflower',
             'vegetable',
-            'salad'
-        ];
+            'salad'];
         private const MEAT_KEYWORDS = [
             'chicken',
             'beef',
@@ -77,8 +70,7 @@
             'salmon',
             'tuna',
             'shrimp',
-            'fish'
-        ];
+            'fish'];
 
         // Dislike/allergy options sent from the frontend are category names (e.g. "Dairy", "Nuts"),
         // not specific food names (e.g. "Milk", "Almonds"). These maps expand each category term
@@ -92,8 +84,7 @@
                 'macadamia',
                 'pistachio',
                 'hazelnut',
-                'pecan'
-            ],
+                'pecan'],
             'dairy'     => [
                 'milk',
                 'yogurt',
@@ -103,8 +94,7 @@
                 'mozzarella',
                 'cheddar',
                 'kefir',
-                'cream'
-            ],
+                'cream'],
             'seafood'   => [
                 'salmon',
                 'tuna',
@@ -113,14 +103,12 @@
                 'tilapia',
                 'mackerel',
                 'sardine',
-                'haddock'
-            ],
+                'haddock'],
             'red meat'  => [
                 'beef',
                 'lamb',
                 'pork',
-                'venison'
-            ],
+                'venison'],
             'pork'      => ['pork'],
             'gluten'    => [
                 'pasta',
@@ -131,15 +119,13 @@
                 'couscous',
                 'bulgur',
                 'muesli',
-                'granola'
-            ],
+                'granola'],
             'eggs'      => ['egg'],
             'egg'       => ['egg'],
             'soy'       => [
                 'tofu',
                 'tempeh',
-                'edamame'
-            ],
+                'edamame'],
             'mushrooms' => ['mushroom'],
             'onions'    => ['onion'],
             'garlic'    => ['garlic'],
@@ -147,9 +133,7 @@
                 'salmon',
                 'mackerel',
                 'sardine',
-                'haddock'
-            ],
-        ];
+                'haddock'],];
 
         private const ALLERGY_EXPANSION = [
             'gluten-free'    => [
@@ -162,8 +146,7 @@
                 'bulgur',
                 'oat',
                 'muesli',
-                'granola'
-            ],
+                'granola'],
             'dairy-free'     => [
                 'milk',
                 'yogurt',
@@ -173,8 +156,7 @@
                 'mozzarella',
                 'cheddar',
                 'kefir',
-                'cream'
-            ],
+                'cream'],
             'nut-free'       => [
                 'almond',
                 'walnut',
@@ -183,24 +165,24 @@
                 'macadamia',
                 'pistachio',
                 'hazelnut',
-                'pecan'
-            ],
+                'pecan'],
             'egg-free'       => ['egg'],
             'shellfish-free' => ['shrimp'],
             'soy-free'       => [
                 'tofu',
                 'tempeh',
-                'edamame'
-            ],
-        ];
+                'edamame'],];
 
-        public function __construct (private readonly NutritionCalculatorService $calculator, private readonly FoodApiService $foodApiService) { }
+        public function __construct (private readonly NutritionCalculatorService $calculator, private readonly FoodApiService $foodApiService)
+        {
+        }
 
         public function generateForUser (User $user): MealPlan
         {
             $profile = $user->profile;
 
             // ── 1. Calculate nutritional needs ───────────────────────────────
+            // TDEE = Total Daily Energy Expenditure
             $bmr = $this->calculator->calculateBMR($profile->age, $profile->gender, $profile->weight_kg, $profile->height_cm);
             $tdee = $this->calculator->calculateTDEE($bmr, $profile->activity_level, $profile->training_days ?? 0);
             $restCal = $this->calculator->calculateCalorieTarget($tdee, $profile->fitness_goal);
@@ -237,8 +219,7 @@
                 'carbs'        => $restMacros['carbs'],
                 'fats'         => $restMacros['fats'],
                 'is_active'    => true,
-                'generated_at' => now(),
-            ]);
+                'generated_at' => now(),]);
 
             // Training day
             $trainingType = $mealPlan->types()->create([
@@ -246,8 +227,7 @@
                 'calories' => $trainCal,
                 'protein'  => $trainMacros['protein'],
                 'carbs'    => $trainMacros['carbs'],
-                'fats'     => $trainMacros['fats'],
-            ]);
+                'fats'     => $trainMacros['fats'],]);
 
             // Rest day
             $restType = $mealPlan->types()->create([
@@ -255,8 +235,7 @@
                 'calories' => $restCal,
                 'protein'  => $restMacros['protein'],
                 'carbs'    => $restMacros['carbs'],
-                'fats'     => $restMacros['fats'],
-            ]);
+                'fats'     => $restMacros['fats'],]);
 
             $mealsPerDay = $profile->meals_per_day ?? 4;
             $this->buildMealsForType($trainingType, $categorized, $trainCal, $mealsPerDay, isTrainingDay: true);
@@ -286,8 +265,7 @@
             $isVegetarian = !empty(array_intersect([
                 'Vegetarian',
                 'Vegan',
-                'Pescatarian'
-            ], $dietary));
+                'Pescatarian'], $dietary));
             $isVegan = in_array('Vegan', $dietary);
 
             $allFoods = Food::all();
@@ -302,12 +280,12 @@
                             'milk',
                             'cheese',
                             'yogurt',
-                            'skyr'
-                        ]));
+                            'skyr']));
             });
 
             // 2. If too few preferred foods, supplement with defaults that pass restrictions
-            if ($preferred->count() < 6) {
+            if ($preferred->count() < 6)
+            {
                 $supplemental = $allFoods->filter(function (Food $food) use ($preferred, $excluded, $isVegetarian, $isVegan) {
                     if ($preferred->contains('id', $food->id))
                         return false;
@@ -318,8 +296,7 @@
                                 'milk',
                                 'cheese',
                                 'yogurt',
-                                'skyr'
-                            ]));
+                                'skyr']));
                 })->take(10);
 
                 $preferred = $preferred->merge($supplemental);
@@ -333,10 +310,12 @@
             $distribution = self::DISTRIBUTIONS[$mealsPerDay] ?? self::DISTRIBUTIONS[4];
             $preWorkoutIdx = (int)ceil($mealsPerDay / 2);
 
-            foreach ($distribution as $orderIndex => $ratio) {
+            foreach ($distribution as $orderIndex => $ratio)
+            {
                 $mealCalories = (int)round($totalCalories * $ratio);
 
-                $mealType = match (true) {
+                $mealType = match (true)
+                {
                     $isTrainingDay && $orderIndex === $preWorkoutIdx => 'pre_workout',
                     $isTrainingDay && $orderIndex === $preWorkoutIdx + 1 => 'post_workout',
                     default => 'standard',
@@ -344,8 +323,7 @@
 
                 $meal = $type->meals()->create([
                     'type'        => $mealType,
-                    'order_index' => $orderIndex,
-                ]);
+                    'order_index' => $orderIndex,]);
 
                 $this->composeMeal($meal, $categorized, $mealCalories, $orderIndex);
             }
@@ -366,34 +344,34 @@
 
             // Slot composition ratios
             $items = [];
-            if ($protein) {
+            if ($protein)
+            {
                 $items[] = [
                     'food'  => $protein,
-                    'ratio' => $isSnack ? 1.0 : 0.50
-                ];
+                    'ratio' => $isSnack ? 1.0 : 0.50];
             }
-            if ($carb && !$isSnack) {
+            if ($carb && !$isSnack)
+            {
                 $items[] = [
                     'food'  => $carb,
-                    'ratio' => 0.35
-                ];
+                    'ratio' => 0.35];
             }
-            if ($veg && !$isSnack && $slotIndex !== 1) {
+            if ($veg && !$isSnack && $slotIndex !== 1)
+            {
                 $items[] = [
                     'food'  => $veg,
-                    'ratio' => null
-                ]; // fixed portion for veg
+                    'ratio' => null]; // fixed portion for veg
             }
 
-            foreach ($items as $item) {
+            foreach ($items as $item)
+            {
                 $food = $item['food'];
                 // Vegetables get a fixed realistic 150g serving; other foods are calorie-targeted
                 $grams = $item['ratio'] === null ? 150 : $this->gramsFor($food, (int)round($targetCalories * $item['ratio']));
 
                 $meal->items()->create([
                     'food_id' => $food->id,
-                    'grams'   => $grams,
-                ]);
+                    'grams'   => $grams,]);
             }
         }
 
@@ -412,22 +390,28 @@
                 'protein'   => [],
                 'carb'      => [],
                 'vegetable' => [],
-                'other'     => []
-            ];
+                'other'     => []];
 
-            foreach ($foods as $food) {
+            foreach ($foods as $food)
+            {
                 $name = strtolower($food->name);
-                if ($this->matchesKeywords($name, self::PROTEIN_KEYWORDS)) {
+                if ($this->matchesKeywords($name, self::PROTEIN_KEYWORDS))
+                {
                     $result['protein'][] = $food;
-                } elseif ($this->matchesKeywords($name, self::CARB_KEYWORDS)) {
+                } elseif ($this->matchesKeywords($name, self::CARB_KEYWORDS))
+                {
                     $result['carb'][] = $food;
-                } elseif ($this->matchesKeywords($name, self::VEGETABLE_KEYWORDS)) {
+                } elseif ($this->matchesKeywords($name, self::VEGETABLE_KEYWORDS))
+                {
                     $result['vegetable'][] = $food;
-                } else {
+                } else
+                {
                     // Classify by dominant macro
-                    if ($food->protein >= $food->carbs) {
+                    if ($food->protein >= $food->carbs)
+                    {
                         $result['protein'][] = $food;
-                    } else {
+                    } else
+                    {
                         $result['carb'][] = $food;
                     }
                 }
@@ -442,11 +426,14 @@
         private function expandCategoryTerms (array $terms, array $expansionMap): array
         {
             $result = [];
-            foreach ($terms as $term) {
+            foreach ($terms as $term)
+            {
                 $key = strtolower($term);
-                if (isset($expansionMap[$key])) {
+                if (isset($expansionMap[$key]))
+                {
                     $result = array_merge($result, $expansionMap[$key]);
-                } else {
+                } else
+                {
                     $result[] = $key;
                 }
             }
@@ -455,8 +442,10 @@
 
         private function isExcluded (string $name, array $excluded): bool
         {
-            foreach ($excluded as $ex) {
-                if ($ex && (str_contains($name, $ex) || str_contains($ex, $name))) {
+            foreach ($excluded as $ex)
+            {
+                if ($ex && (str_contains($name, $ex) || str_contains($ex, $name)))
+                {
                     return true;
                 }
             }
@@ -465,7 +454,8 @@
 
         private function matchesKeywords (string $text, array $keywords): bool
         {
-            foreach ($keywords as $kw) {
+            foreach ($keywords as $kw)
+            {
                 if (str_contains($text, $kw))
                     return true;
             }
