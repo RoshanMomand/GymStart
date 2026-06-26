@@ -26,7 +26,8 @@
         }
 
         /**
-         * Store a newly created resource in storage.
+         * Store a newly created resource in
+         * storage.
          */
         public function store (StoreUserRequest $request)
         {
@@ -57,7 +58,9 @@
             }
             catch (\Exception $e)
             {
-                return response()->json(['message' => 'Failed to register user', 'error' => $e->getMessage()], 500);
+                return response()->json([
+                    'message' => 'Failed to register user',
+                    'error'   => $e->getMessage()], 500);
             }
         }
 
@@ -122,17 +125,8 @@
             }
         }
 
-        /**
-         * Handle user onboarding submission.
-         * POST /user/onboarding
-         * TODO: Validate request data (name, age, weight, fitness goal, etc.)
-         * TODO: Delegate to UserService::processOnboarding()
-         * TODO: Return created user resource
-         */
-
         public function onboarding (Request $request): JsonResponse
         {
-            // TODO: implement
             return response()->json(['message' => 'onboarding endpoint'], 501);
         }
 

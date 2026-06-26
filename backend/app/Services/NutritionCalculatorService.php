@@ -27,7 +27,7 @@
         // trainingDays adds ~250 kcal per session spread over the week (ACSM estimate for 45-60min moderate session)
         public function calculateTDEE (float $bmr, string $activityLevel, int $trainingDays = 0): float
         {
-            $multiplier = self::ACTIVITY_MULTIPLIERS[$activityLevel] ?? 1.2;
+            $multiplier = self::ACTIVITY_MULTIPLIERS[$activityLevel];
             $tdee = $bmr * $multiplier;
             $tdee += ($trainingDays * 250) / 7;
             return $tdee;
@@ -56,7 +56,7 @@
             return [
                 'protein' => (int)round(($calories * $pRatio) / 4),
                 'carbs'   => (int)round(($calories * $cRatio) / 4),
-                'fats'    => (int)round(($calories * $fRatio) / 9),];
+                'fats'    => (int)round(($calories * $fRatio) / 9)];
         }
 
         // Training days get +10% calories to fuel performance

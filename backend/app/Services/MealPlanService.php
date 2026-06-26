@@ -134,7 +134,6 @@
                 'mackerel',
                 'sardine',
                 'haddock'],];
-
         private const ALLERGY_EXPANSION = [
             'gluten-free'    => [
                 'pasta',
@@ -181,7 +180,7 @@
         {
             $profile = $user->profile;
 
-            // ── 1. Calculate nutritional needs ───────────────────────────────
+            // 1. Calculate nutritional needs
             // TDEE = Total Daily Energy Expenditure
             $bmr = $this->calculator->calculateBMR($profile->age, $profile->gender, $profile->weight_kg, $profile->height_cm);
             $tdee = $this->calculator->calculateTDEE($bmr, $profile->activity_level, $profile->training_days ?? 0);
@@ -249,7 +248,7 @@
             return MealPlan::where('user_id', $userId)->with('types.meals.items.food')->latest('generated_at')->first();
         }
 
-        // ── Private helpers ───────────────────────────────────────────────────
+        // ── Private helpers
 
         private function selectFoodsForUser (UserProfile $profile): array
         {

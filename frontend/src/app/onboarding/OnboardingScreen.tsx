@@ -64,7 +64,8 @@ export default function OnboardingScreen({onComplete}: OnboardingScreenProps) {
     meals_per_day: 4,
   });
 
-  const updateFormData = <K extends keyof OnboardingFormData>(field: K, value: OnboardingFormData[K]) => {
+  const updateFormData = <K extends keyof OnboardingFormData>(field: K,
+    value: OnboardingFormData[K]) => {
     setFormData((prev) => ({...prev, [field]: value}));
   };
 

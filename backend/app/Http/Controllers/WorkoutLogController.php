@@ -8,6 +8,7 @@
     use App\Services\WorkoutPlanService;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\Auth;
 
     class WorkoutLogController extends Controller
     {
@@ -33,7 +34,7 @@
                 'trained_at' => 'nullable|date',
                 'notes'      => 'nullable|string|max:1000',]);
 
-            $plan = $this->workoutPlanService->getPlanForUser($user->id);
+            $plan = $this->workoutPlanService->getPlanForUser($user);
 
             if (!$plan)
             {
@@ -79,7 +80,7 @@
                 'sets.*.external_id'    => 'required|string',
                 'sets.*.set_number'     => 'required|integer|min:1',
                 'sets.*.reps_completed' => 'required|integer|min:0',
-                'sets.*.weight_kg'      => 'nullable|numeric|min:0',
+                'sets.*.weight_kg'      => 'nullable|numeric|min:0|max:999.99',
                 'sets.*.notes'          => 'nullable|string|max:500',]);
 
             $externalIds = collect($data['sets'])->pluck('external_id')->unique()->values();

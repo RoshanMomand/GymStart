@@ -15,15 +15,13 @@
         private const EQUIPMENT_BY_LEVEL = [
             'beginner'     => [
                 'leverage machine',
-                'smith machine'
-            ],
+                'smith machine'],
             'intermediate' => [
                 'leverage machine',
                 'smith machine',
                 'cable',
                 'dumbbell',
-                'ez barbell'
-            ],
+                'ez barbell'],
             'advanced'     => [
                 'leverage machine',
                 'smith machine',
@@ -32,9 +30,7 @@
                 'ez barbell',
                 'barbell',
                 'olympic barbell',
-                'trap bar'
-            ],
-        ];
+                'trap bar'],];
 
         // Difficulty levels that each experience level may receive
         // Advanced users can handle all difficulties; beginners only get beginner exercises
@@ -42,29 +38,22 @@
             'beginner'     => ['beginner'],
             'intermediate' => [
                 'beginner',
-                'intermediate'
-            ],
+                'intermediate'],
             'advanced'     => [
                 'beginner',
                 'intermediate',
-                'advanced'
-            ],
-        ];
+                'advanced'],];
 
         private const SETS_REPS = [
             'lose_weight'  => [
                 'sets' => 3,
-                'reps' => '12-15'
-            ],
+                'reps' => '12-15'],
             'build_muscle' => [
                 'sets' => 4,
-                'reps' => '8-12'
-            ],
+                'reps' => '8-12'],
             'maintain'     => [
                 'sets' => 3,
-                'reps' => '10-12'
-            ],
-        ];
+                'reps' => '10-12'],];
 
         // Training splits keyed by number of training days
         // Body part values must match ExerciseDB / exercises table exactly
@@ -77,10 +66,7 @@
                         'chest',
                         'back',
                         'upper legs',
-                        'shoulders'
-                    ]
-                ],
-            ],
+                        'shoulders']],],
             // 2 days: upper / lower — each muscle group 1x/week
             2 => [
                 [
@@ -89,17 +75,12 @@
                         'chest',
                         'back',
                         'shoulders',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Lower Body',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
-            ],
+                        'lower legs']],],
             // 3 days: Full Body A/B/C — each muscle group 3x/week (more frequency = better for beginners & intermediates)
             // PPL at 3 days only hits each group 1x/week which is too low
             3 => [
@@ -108,26 +89,19 @@
                     [
                         'chest',
                         'back',
-                        'upper legs'
-                    ]
-                ],
+                        'upper legs']],
                 [
                     'Full Body B',
                     [
                         'shoulders',
                         'back',
-                        'upper legs'
-                    ]
-                ],
+                        'upper legs']],
                 [
                     'Full Body C',
                     [
                         'chest',
                         'upper arms',
-                        'upper legs'
-                    ]
-                ],
-            ],
+                        'upper legs']],],
             // 4 days: Upper / Lower — each muscle group 2x/week
             4 => [
                 [
@@ -135,32 +109,23 @@
                     [
                         'chest',
                         'back',
-                        'shoulders'
-                    ]
-                ],
+                        'shoulders']],
                 [
                     'Lower A',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
+                        'lower legs']],
                 [
                     'Upper B',
                     [
                         'chest',
                         'back',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Lower B',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
-            ],
+                        'lower legs']],],
             // 5 days: Upper / Lower / Push / Pull / Legs
             5 => [
                 [
@@ -169,39 +134,28 @@
                         'chest',
                         'back',
                         'shoulders',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Lower',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
+                        'lower legs']],
                 [
                     'Push',
                     [
                         'chest',
                         'shoulders',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Pull',
                     [
                         'back',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Legs',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
-            ],
+                        'lower legs']],],
             // 6 days: PPL x2 — each muscle group 2x/week with high volume
             6 => [
                 [
@@ -209,46 +163,32 @@
                     [
                         'chest',
                         'shoulders',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Pull A',
                     [
                         'back',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Legs A',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
+                        'lower legs']],
                 [
                     'Push B',
                     [
                         'chest',
-                        'shoulders'
-                    ]
-                ],
+                        'shoulders']],
                 [
                     'Pull B',
                     [
                         'back',
-                        'upper arms'
-                    ]
-                ],
+                        'upper arms']],
                 [
                     'Legs B',
                     [
                         'upper legs',
-                        'lower legs'
-                    ]
-                ],
-            ],
-        ];
+                        'lower legs']],],];
 
         public function generateForUser (User $user): WorkoutPlan
         {
@@ -267,14 +207,17 @@
 
             $schedule = [];
 
-            foreach ($split as $index => [$label, $bodyParts]) {
+            foreach ($split as $index => [$label, $bodyParts])
+            {
                 $dayExercises = [];
                 $perBodyPart = max(2, (int)ceil($exercisesPerDay / count($bodyParts)));
 
-                foreach ($bodyParts as $bodyPart) {
+                foreach ($bodyParts as $bodyPart)
+                {
                     $exercises = Exercise::where('body_part', $bodyPart)->whereIn('equipment', $equipment)->whereIn('difficulty', $difficulty)->inRandomOrder()->limit($perBodyPart)->get();
 
-                    foreach ($exercises as $exercise) {
+                    foreach ($exercises as $exercise)
+                    {
                         $dayExercises[] = [
                             'id'                => $exercise->external_id,
                             'name'              => $exercise->name,
@@ -289,16 +232,14 @@
                             'video_url'         => $exercise->video_url,
                             'instructions'      => $exercise->instructions ?? [],
                             'sets'              => $setsReps['sets'],
-                            'reps'              => $setsReps['reps'],
-                        ];
+                            'reps'              => $setsReps['reps'],];
                     }
                 }
 
                 $schedule[] = [
                     'day_number' => $index + 1,
                     'label'      => $label,
-                    'exercises'  => $dayExercises,
-                ];
+                    'exercises'  => $dayExercises,];
             }
 
             $restDayExercises = $this->buildRestDay($level);
@@ -306,11 +247,10 @@
             return WorkoutPlan::updateOrCreate(['user_id' => $user->id], [
                 'exercises'          => $schedule,
                 'rest_day_exercises' => $restDayExercises,
-                'is_active'          => true,
-            ]);
+                'is_active'          => true,]);
         }
 
-        /**
+         /**
          * Build rest day cardio options based on experience level.
          * Science basis (PubMed):
          * - Cycling/elliptical cause the least muscle damage (concentric-dominant, no eccentric impact)
@@ -332,16 +272,14 @@
                 'dumbbell burpee',
                 'double under jump rope',
                 'wheel run',
-                'bear crawl',
-            ];
+                'bear crawl',];
 
             // Machine-based equipment = low/zero eccentric load (safest for all levels)
             $machineEquipment = [
                 'stationary bike',
                 'elliptical machine',
                 'leverage machine',
-                'stepmill machine'
-            ];
+                'stepmill machine'];
 
             // Plyometric body weight movements excluded for beginners and intermediates
             $plyometricExcluded = [
@@ -357,8 +295,7 @@
                 'semi squat jump (male)',
                 'scissor jumps (male)',
                 'skater hops',
-                'push to run',
-            ];
+                'push to run',];
 
             $query = Exercise::where('body_part', 'cardio')->whereNotIn('name', $alwaysExcluded)->orderByRaw("CASE equipment
                 WHEN 'stationary bike'    THEN 1
@@ -368,7 +305,8 @@
                 ELSE                           5
             END");
 
-            if ($level === 'beginner') {
+            if ($level === 'beginner')
+            {
                 // 3 options only — evidence-based least-interference cardio for beginners:
                 // 1. Stationary bike  — concentric-only, zero eccentric, highest evidence
                 // 2. Elliptical       — low-impact, mimics cycling mechanics
@@ -376,16 +314,15 @@
                 return Exercise::whereIn('name', [
                     'stationary bike run v. 3',
                     'walk elliptical cross trainer',
-                    'walking on incline treadmill',
-                ])->get()->map(fn ($exercise) => [
+                    'walking on incline treadmill',])->get()->map(fn ($exercise) => [
                     'id'        => $exercise->external_id,
                     'name'      => $exercise->name,
                     'equipment' => $exercise->equipment,
                     'gif_url'   => $exercise->gif_url,
                     'video_url' => $exercise->video_url,
-                    'duration'  => '20-30 min',
-                ])->toArray();
-            } elseif ($level === 'intermediate') {
+                    'duration'  => '20-30 min',])->toArray();
+            } elseif ($level === 'intermediate')
+            {
                 // Machine + controlled body weight (no jumping/plyometric)
                 $query->where(function ($q) use ($machineEquipment, $plyometricExcluded) {
                     $q->whereIn('equipment', $machineEquipment)->orWhere(function ($q2) use ($plyometricExcluded) {
@@ -401,8 +338,7 @@
                 'equipment' => $exercise->equipment,
                 'gif_url'   => $exercise->gif_url,
                 'video_url' => $exercise->video_url,
-                'duration'  => '20-30 min',
-            ])->toArray();
+                'duration'  => '20-30 min',])->toArray();
         }
 
         public function getPlanForUser (User $user): ?WorkoutPlan
